@@ -1,0 +1,34 @@
+[
+  {
+    "type": "course",
+    "name": "Antony Robinson",
+    "email": "kingantonyrobinson@gmail.com",
+    "phone": "8526263458",
+    "dob": "2015-05-15",
+    "studying": "1",
+    "leadDetails": "a",
+    "course": "1-Day IoT Workshop",
+    "status": "Applied",
+    "id": "1777994627424",
+    "refNo": "AMAI_2605_001",
+    "date": "2026-05-05T15:23:47.424Z"
+  },
+  {
+    "type": "course",
+    "name": "ANTONY ROBINSON SUNDARRAJ",
+    "email": "mr.antonytrichy@gmail.com",
+    "phone": "8526263458",
+    "dob": "2015-05-05",
+    "studying": "1",
+    "leadDetails": "a",
+    "course": "Summer AI Bootcamp '26",
+    "status": "Applied",
+    "paymentStatus": "Pay on Day",
+    "paymentId": "",
+    "amountPaid": 0,
+    "amountDue": 1499,
+    "id": "1778999920592",
+    "date": "2026-05-17T06:38:40.592Z",
+    "refNo": "AMAI_CASH_2605_002"
+  }
+]
