@@ -43,6 +43,78 @@ export default function RegistrationPage() {
   const [courseData, setCourseData] = useState<any>(null);
   const [allInternships, setAllInternships] = useState<any[]>([]);
 
+  // Coupon and dynamic pricing states
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
+  const [calculatedPricing, setCalculatedPricing] = useState<any>(null);
+  const [couponError, setCouponError] = useState('');
+  const [couponSuccess, setCouponSuccess] = useState('');
+  const [paymentOption, setPaymentOption] = useState<'full' | 'advance'>('advance');
+
+  // Reset coupon state when courseData changes
+  useEffect(() => {
+    setCouponCode('');
+    setAppliedCoupon(null);
+    setCalculatedPricing(null);
+    setCouponError('');
+    setCouponSuccess('');
+    setPaymentOption('advance');
+  }, [courseData]);
+
+  // Real-time coupon validation on input typing
+  useEffect(() => {
+    if (!courseData) return;
+
+    const trimmedCode = couponCode.toUpperCase().trim();
+    if (!trimmedCode) {
+      setAppliedCoupon(null);
+      setCalculatedPricing(null);
+      setCouponSuccess('');
+      setCouponError('');
+      return;
+    }
+
+    // Parse active coupons
+    let parsedCoupons: any[] = [];
+    if (courseData.coupons) {
+      try {
+        parsedCoupons = typeof courseData.coupons === 'string' 
+          ? JSON.parse(courseData.coupons) 
+          : courseData.coupons;
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    const todayStr = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Kolkata',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }).format(new Date());
+    const matchedCoupon = (Array.isArray(parsedCoupons) ? parsedCoupons : []).find((c: any) => {
+      if (!c || !c.code || c.code.toUpperCase() !== trimmedCode || c.isActive === false) {
+        return false;
+      }
+      if (c.startDate && todayStr < c.startDate) return false;
+      if (c.endDate && todayStr > c.endDate) return false;
+      return true;
+    });
+
+    const isLegacyMatch = courseData.discountCode && 
+                          courseData.discountCode.toUpperCase() === trimmedCode;
+
+    if (matchedCoupon || isLegacyMatch) {
+      // Auto apply matched valid coupon
+      handleApplyCoupon(trimmedCode);
+    } else {
+      // Reset price calculation while typing invalid code, keep error silent until manual Apply clicked
+      setAppliedCoupon(null);
+      setCalculatedPricing(null);
+      setCouponSuccess('');
+    }
+  }, [couponCode, courseData]);
+
   useEffect(() => {
     window.scrollTo(0, 0);
     fetch(`${API_BASE_URL}/api/courses`)
@@ -52,6 +124,10 @@ export default function RegistrationPage() {
           if (actualType === 'course' && slug) {
             const course = data.courses.find((c: any) => c.slug === slug);
             if (course) setCourseData(course);
+          } else if (actualType === 'internship') {
+            const internships = data.courses.filter((c: any) => c.type === 'internship');
+            const matched = slug ? internships.find((i: any) => i.slug === slug) : internships[0];
+            if (matched) setCourseData(matched);
           }
           const internships = data.courses.filter((c: any) => c.type === 'internship');
           if (internships.length > 0) {
@@ -74,11 +150,79 @@ export default function RegistrationPage() {
     }
   }, [status]);
 
+  const handleApplyCoupon = async (codeToApply: string) => {
+    if (!codeToApply || !slug) return;
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/pricing/${slug}?coupon=${codeToApply}`);
+      const data = await res.json();
+      if (data.success && data.isApplied) {
+        setAppliedCoupon(codeToApply);
+        setCalculatedPricing(data);
+        setCouponSuccess(`Coupon "${codeToApply}" applied successfully!`);
+        setCouponError('');
+      } else {
+        setCouponError('Invalid or inactive coupon code.');
+        setCouponSuccess('');
+        setAppliedCoupon(null);
+        setCalculatedPricing(null);
+      }
+    } catch (err) {
+      setCouponError('Failed to validate coupon code.');
+    }
+  };
+
+  const renderCouponSection = () => {
+    if (!courseData || courseData.price <= 0) return null;
+
+    return (
+      <div className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-4 pt-4">
+        <div>
+          <h4 className="text-xs font-black text-transparent bg-clip-text bg-gradient-to-r from-electric-blue to-teal-green uppercase tracking-wider flex items-center gap-1.5">
+            <span>🏷️</span> Have a Promo Coupon?
+          </h4>
+          <p className="text-white/40 text-[9px] font-bold mt-1">Apply coupon codes to reduce the total investment cost instantly.</p>
+        </div>
+        <div className="flex gap-2">
+          <input 
+            type="text" 
+            placeholder="ENTER COUPON CODE" 
+            value={couponCode}
+            onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+            className="bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white text-xs font-bold focus:outline-none focus:border-electric-blue outline-none uppercase flex-grow tracking-wider"
+          />
+          <button 
+            type="button"
+            onClick={() => handleApplyCoupon(couponCode)}
+            className="px-5 py-3 bg-electric-blue/15 text-electric-blue border border-electric-blue/30 rounded-xl text-xs font-black uppercase hover:bg-electric-blue/30 transition-all"
+          >
+            Apply
+          </button>
+        </div>
+        {couponError && <p className="text-red-400 text-[10px] font-bold mt-1 animate-pulse">❌ {couponError}</p>}
+        {couponSuccess && <p className="text-teal-green text-[10px] font-bold mt-1">✅ {couponSuccess}</p>}
+      </div>
+    );
+  };
+
+  // Pricing constants derived dynamically
+  const basePrice = courseData?.price || 0;
+  const finalPrice = calculatedPricing ? calculatedPricing.finalAmount : basePrice;
+  
+  let regFee = 0;
+  if (courseData) {
+    if (courseData.registerFeeFixed > 0) {
+      regFee = courseData.registerFeeFixed;
+    } else if (courseData.registerFeePercent > 0) {
+      regFee = Math.round(finalPrice * (courseData.registerFeePercent / 100));
+    }
+  }
+  if (regFee > finalPrice) regFee = finalPrice;
+  const dueLater = finalPrice - regFee;
+  const isPaid = courseData && (finalPrice > 0 || regFee > 0);
+
   const handleSubmit = async (e?: React.FormEvent, paymentResponse?: any) => {
     if (e) e.preventDefault();
     
-    const isPaid = courseData && (courseData.price > 0 || (courseData.registerFeeFixed && courseData.registerFeeFixed > 0));
-
     // If it's a paid course and we don't have a payment response yet, move to payment step
     if (isPaid && !paymentResponse && status !== 'payment') {
       setStatus('payment');
@@ -103,9 +247,17 @@ export default function RegistrationPage() {
       }
     }
 
-    let pStatus = paymentResponse ? 'Paid' : 'Applied';
-    if (courseData && courseData.price === 0) pStatus = 'Free';
+    let pStatus = paymentResponse ? (regFee > 0 && paymentOption === 'advance' ? 'Paid' : 'Paid') : 'Applied';
+    if (courseData && finalPrice === 0) pStatus = 'Free';
     if (status === 'payment' && !paymentResponse) pStatus = 'Pay on Day';
+
+    const actualAmountPaid = paymentResponse 
+      ? (regFee > 0 && paymentOption === 'advance' ? regFee : finalPrice) 
+      : 0;
+
+    const actualAmountDue = paymentResponse 
+      ? (regFee > 0 && paymentOption === 'advance' ? dueLater : 0) 
+      : finalPrice;
 
     const payload = actualType === 'course' 
       ? { 
@@ -113,13 +265,16 @@ export default function RegistrationPage() {
           course: courseData?.title || courseNameParam, status: 'Applied', 
           paymentStatus: pStatus,
           paymentId: paymentResponse?.razorpay_payment_id || '',
-          amountPaid: paymentResponse ? (courseData.registerFeeFixed || courseData.price) : 0,
-          amountDue: paymentResponse ? (courseData.price - (courseData.registerFeeFixed || courseData.price)) : (courseData?.price || 0)
+          amountPaid: actualAmountPaid,
+          amountDue: actualAmountDue
         }
       : { 
           type: actualType, name, email, phone, educationLevel, department, internshipDomain, 
           duration, projectType, status: 'Applied',
-          paymentStatus: pStatus
+          paymentStatus: pStatus,
+          paymentId: paymentResponse?.razorpay_payment_id || '',
+          amountPaid: actualAmountPaid,
+          amountDue: actualAmountDue
         };
 
     // Direct application submission
@@ -186,30 +341,116 @@ export default function RegistrationPage() {
             </div>
 
             {status === 'payment' ? (
-              <div className="animate-in fade-in slide-in-from-bottom-4">
+              <div className="animate-in fade-in slide-in-from-bottom-4 space-y-6">
+                {renderCouponSection()}
+
+                {/* Payment Option Selector */}
+                {regFee > 0 && regFee < finalPrice && (
+                  <div className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-3">
+                    <h4 className="text-xs font-black text-transparent bg-clip-text bg-gradient-to-r from-electric-blue to-teal-green uppercase tracking-wider flex items-center gap-1.5 mb-1">
+                      <span>💳</span> Choose Payment Plan
+                    </h4>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {/* Option 1: Advance Fee */}
+                      <button
+                        type="button"
+                        onClick={() => setPaymentOption('advance')}
+                        className={`p-4 rounded-xl border text-left transition-all ${
+                          paymentOption === 'advance'
+                            ? 'bg-electric-blue/10 border-electric-blue shadow-[0_0_15px_rgba(0,229,255,0.1)]'
+                            : 'bg-black/30 border-white/10 hover:border-white/20'
+                        }`}
+                      >
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="text-xs font-black uppercase tracking-wider text-white">Pay Advance Fee</span>
+                          <div className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${paymentOption === 'advance' ? 'border-electric-blue bg-electric-blue' : 'border-white/30'}`}>
+                            {paymentOption === 'advance' && <div className="w-1.5 h-1.5 rounded-full bg-black" />}
+                          </div>
+                        </div>
+                        <p className="text-[14px] font-black text-electric-blue">₹{regFee}</p>
+                        <p className="text-[9px] text-white/50 font-bold mt-1 leading-relaxed">Secure your seat now. Pay the remaining ₹{dueLater} on the first day of class.</p>
+                      </button>
+
+                      {/* Option 2: Full Amount */}
+                      <button
+                        type="button"
+                        onClick={() => setPaymentOption('full')}
+                        className={`p-4 rounded-xl border text-left transition-all ${
+                          paymentOption === 'full'
+                            ? 'bg-electric-blue/10 border-electric-blue shadow-[0_0_15px_rgba(0,229,255,0.1)]'
+                            : 'bg-black/30 border-white/10 hover:border-white/20'
+                        }`}
+                      >
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="text-xs font-black uppercase tracking-wider text-white">Pay Full Amount</span>
+                          <div className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${paymentOption === 'full' ? 'border-electric-blue bg-electric-blue' : 'border-white/30'}`}>
+                            {paymentOption === 'full' && <div className="w-1.5 h-1.5 rounded-full bg-black" />}
+                          </div>
+                        </div>
+                        <p className="text-[14px] font-black text-electric-blue">₹{finalPrice}</p>
+                        <p className="text-[9px] text-white/50 font-bold mt-1 leading-relaxed">Clear the entire fee now for a seamless onboarding experience.</p>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 <div className="bg-white/5 border border-white/10 rounded-2xl p-6 mb-8 space-y-4">
                   <div className="flex justify-between items-center">
                     <span className="text-white/50 text-xs font-bold uppercase tracking-wider">Base Fee</span>
-                    <span className="text-white font-black">₹{courseData?.price || 0}</span>
+                    <span className="text-white font-mono font-bold">₹{basePrice}</span>
                   </div>
-                  {courseData?.registerFeeFixed > 0 && (
-                    <div className="flex justify-between items-center bg-electric-blue/5 -mx-6 px-6 py-4 border-y border-electric-blue/10">
-                      <div>
-                        <span className="block text-electric-blue text-[10px] font-black uppercase tracking-widest">Advance To Pay Now</span>
-                        <span className="text-white/40 text-[9px] font-bold">Registration Fee</span>
-                      </div>
-                      <span className="text-electric-blue font-black text-xl">₹{courseData.registerFeeFixed}</span>
+                  {calculatedPricing?.isApplied && (
+                    <div className="flex justify-between items-center text-teal-green">
+                      <span className="text-xs font-bold uppercase tracking-wider">Coupon Discount ({appliedCoupon})</span>
+                      <span className="font-mono font-bold">-₹{basePrice - finalPrice}</span>
                     </div>
                   )}
-                  <div className="flex justify-between items-center border-t border-white/5 pt-4">
-                    <span className="text-white/50 text-xs font-bold uppercase tracking-wider">Amount Due Later</span>
-                    <span className="text-white font-bold opacity-60">₹{(courseData?.price || 0) - (courseData?.registerFeeFixed || 0)}</span>
+                  {regFee > 0 && paymentOption === 'advance' ? (
+                    <>
+                      <div className="flex justify-between items-center bg-electric-blue/5 -mx-6 px-6 py-4 border-y border-electric-blue/10">
+                        <div>
+                          <span className="block text-electric-blue text-[10px] font-black uppercase tracking-widest">Advance To Pay Now</span>
+                          <span className="text-white/40 text-[9px] font-bold">Registration Fee</span>
+                        </div>
+                        <span className="text-electric-blue font-mono font-black text-xl">₹{regFee}</span>
+                      </div>
+                      <div className="flex justify-between items-center border-t border-white/5 pt-4">
+                        <span className="text-white/50 text-xs font-bold uppercase tracking-wider">Amount Due Later</span>
+                        <span className="text-white font-mono font-bold opacity-60">₹{dueLater}</span>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex justify-between items-center bg-electric-blue/5 -mx-6 px-6 py-4 border-y border-electric-blue/10">
+                      <div>
+                        <span className="block text-electric-blue text-[10px] font-black uppercase tracking-widest">Total Amount</span>
+                      </div>
+                      <span className="text-electric-blue font-mono font-black text-xl">₹{finalPrice}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Trustworthy & Security Badging */}
+                <div className="border border-white/10 bg-white/[0.02] p-5 rounded-2xl flex flex-col sm:flex-row items-center gap-4 text-left justify-between shadow-[inset_0_1px_1px_rgba(255,255,255,0.01)]">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-teal-green/10 border border-teal-green/30 flex items-center justify-center text-teal-green shrink-0">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                    </div>
+                    <div>
+                      <p className="text-xs font-black uppercase tracking-wider text-white">Trustworthy Registration</p>
+                      <p className="text-[10px] text-white/50 font-bold leading-normal mt-0.5">Your payment is encrypted. Seat reservations secure your physical ESP32 training kit.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2.5 shrink-0 bg-white/[0.04] px-3.5 py-2 rounded-xl border border-white/5">
+                    <span className="text-[9px] font-black uppercase tracking-widest text-teal-green">🔒 SECURE SSL</span>
+                    <div className="w-px h-3.5 bg-white/20" />
+                    <span className="text-[9px] font-black uppercase tracking-widest text-electric-blue">💳 RAZORPAY VERIFIED</span>
                   </div>
                 </div>
 
                 <div className="space-y-4">
                   <PaymentComponent 
-                    amount={courseData?.registerFeeFixed || courseData?.price || 0}
+                    amount={regFee > 0 && paymentOption === 'advance' ? regFee : finalPrice}
                     email={email}
                     phone={phone}
                     courseName={courseData?.title || courseNameParam}
@@ -221,7 +462,7 @@ export default function RegistrationPage() {
                     onClick={() => handleSubmit()}
                     className="w-full py-4 text-white/40 hover:text-white font-black text-xs uppercase tracking-[0.2em] transition-all"
                   >
-                    Pay Cash on Day (Submit Only)
+                    Pay Cash on Day (Submit & Pay Later)
                   </button>
                 </div>
 
@@ -233,68 +474,104 @@ export default function RegistrationPage() {
                 </button>
               </div>
             ) : (
-                <form onSubmit={handleSubmit} className="space-y-6">
+              <form onSubmit={handleSubmit} className="space-y-6">
+                  {/* Basic Information Section */}
+                  <div className="border-b border-white/10 pb-4 mb-4">
+                    <h3 className={`text-sm font-extrabold uppercase tracking-wider flex items-center gap-1.5 ${actualType === 'course' ? 'text-electric-blue' : 'text-teal-green'}`}>
+                      <span>👤</span> Basic Contact Information
+                    </h3>
+                  </div>
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label htmlFor="fullName" className="block text-xs uppercase tracking-widest text-white/50 font-bold mb-2">Full Name</label>
-                      <input required id="fullName" name="fullName" autoComplete="name" type="text" value={name} onChange={e => setName(e.target.value)} className={`w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-white focus:outline-none focus:border-${actualType === 'course' ? 'electric-blue' : 'teal-green'} transition-colors`} />
+                      <label htmlFor="fullName" className="block text-xs uppercase tracking-widest text-white/50 font-bold mb-1.5">Full Name</label>
+                      <input required id="fullName" name="fullName" autoComplete="name" type="text" placeholder="Enter your full name" value={name} onChange={e => setName(e.target.value)} className={`w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-white focus:outline-none focus:border-${actualType === 'course' ? 'electric-blue' : 'teal-green'} transition-colors`} />
+                      <span className="text-[10px] text-white/30 mt-1 block">As it should appear on your course completion certificate.</span>
                     </div>
                     <div>
-                      <label htmlFor="phone" className="block text-xs uppercase tracking-widest text-white/50 font-bold mb-2">Mobile Number</label>
-                      <input required id="phone" name="phone" autoComplete="tel" type="tel" pattern="[0-9]{10}" maxLength={10} title="Please enter exactly 10 digits" value={phone} onChange={e => setPhone(e.target.value)} className={`w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-white focus:outline-none focus:border-${actualType === 'course' ? 'electric-blue' : 'teal-green'} transition-colors`} />
+                      <label htmlFor="phone" className="block text-xs uppercase tracking-widest text-white/50 font-bold mb-1.5">Mobile Number</label>
+                      <input required id="phone" name="phone" autoComplete="tel" type="tel" pattern="[0-9]{10}" maxLength={10} placeholder="10-digit mobile number" title="Please enter exactly 10 digits" value={phone} onChange={e => setPhone(e.target.value)} className={`w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-white focus:outline-none focus:border-${actualType === 'course' ? 'electric-blue' : 'teal-green'} transition-colors`} />
+                      <span className="text-[10px] text-white/30 mt-1 block">Active WhatsApp number for schedules and onboarding steps.</span>
                     </div>
                   </div>
                   
                   <div>
-                    <label htmlFor="email" className="block text-xs uppercase tracking-widest text-white/50 font-bold mb-2">Email Address</label>
-                    <input required id="email" name="email" autoComplete="email" type="email" pattern="[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}$" title="Please enter a valid email address" value={email} onChange={e => setEmail(e.target.value)} className={`w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-white focus:outline-none focus:border-${actualType === 'course' ? 'electric-blue' : 'teal-green'} transition-colors`} />
+                    <label htmlFor="email" className="block text-xs uppercase tracking-widest text-white/50 font-bold mb-1.5">Email Address</label>
+                    <input required id="email" name="email" autoComplete="email" type="email" pattern="[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}$" placeholder="name@domain.com" title="Please enter a valid email address" value={email} onChange={e => setEmail(e.target.value)} className={`w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-white focus:outline-none focus:border-${actualType === 'course' ? 'electric-blue' : 'teal-green'} transition-colors`} />
+                    <span className="text-[10px] text-white/30 mt-1 block">Receipt, syllabus materials, and meeting links will be sent here.</span>
                   </div>
 
                   {actualType === 'course' && (
                     <>
+                      <div className="border-b border-white/10 pb-4 mb-4 pt-4">
+                        <h3 className="text-sm font-extrabold text-electric-blue uppercase tracking-wider flex items-center gap-1.5">
+                          <span>🎓</span> Academic & Goals Details
+                        </h3>
+                      </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                          <label htmlFor="dob" className="block text-xs uppercase tracking-widest text-white/50 font-bold mb-2">Date of Birth</label>
+                          <label htmlFor="dob" className="block text-xs uppercase tracking-widest text-white/50 font-bold mb-1.5">Date of Birth</label>
                           <input required id="dob" name="dob" autoComplete="bday" type="date" value={dob} onChange={e => setDob(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-white focus:outline-none focus:border-electric-blue transition-colors [color-scheme:dark]" />
+                          <span className="text-[10px] text-white/30 mt-1 block">Verification of eligibility (minimum age 10 years).</span>
                         </div>
                         <div>
-                          <label htmlFor="studying" className="block text-xs uppercase tracking-widest text-white/50 font-bold mb-2">Currently Studying</label>
-                          <input required id="studying" name="studying" type="text" placeholder="Grade, School or College" value={studying} onChange={e => setStudying(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-white focus:outline-none focus:border-electric-blue transition-colors" />
+                          <label htmlFor="studying" className="block text-xs uppercase tracking-widest text-white/50 font-bold mb-1.5">Currently Studying / Profession</label>
+                          <input required id="studying" name="studying" type="text" placeholder="Grade, School, College or Company" value={studying} onChange={e => setStudying(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-white focus:outline-none focus:border-electric-blue transition-colors" />
+                          <span className="text-[10px] text-white/30 mt-1 block">Your current education grade, branch, or workspace.</span>
                         </div>
                       </div>
                       <div>
-                        <label htmlFor="leadDetails" className="block text-xs uppercase tracking-widest text-white/50 font-bold mb-2">Future Expectations & Goals</label>
-                        <textarea required id="leadDetails" name="leadDetails" rows={4} placeholder="Tell us what you hope to achieve..." value={leadDetails} onChange={e => setLeadDetails(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-white focus:outline-none focus:border-electric-blue transition-colors resize-none" />
+                        <label htmlFor="leadDetails" className="block text-xs uppercase tracking-widest text-white/50 font-bold mb-1.5">Expectations & Future Goals</label>
+                        <textarea required id="leadDetails" name="leadDetails" rows={4} placeholder="Let us know what you want to learn, or your target goals..." value={leadDetails} onChange={e => setLeadDetails(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-white focus:outline-none focus:border-electric-blue transition-colors resize-none" />
+                        <span className="text-[10px] text-white/30 mt-1 block">Helps our trainers align core lessons or capstones to your goals.</span>
                       </div>
                     </>
                   )}
 
                   {actualType === 'internship' && (
                     <>
+                      <div className="border-b border-white/10 pb-4 mb-4 pt-4">
+                        <h3 className="text-sm font-extrabold text-teal-green uppercase tracking-wider flex items-center gap-1.5">
+                          <span>💼</span> Internship Mapping Specifications
+                        </h3>
+                      </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                          <label htmlFor="educationLevel" className="block text-xs uppercase tracking-widest text-white/50 font-bold mb-2">Education Level</label>
+                          <label htmlFor="educationLevel" className="block text-xs uppercase tracking-widest text-white/50 font-bold mb-1.5">Education Level</label>
                           <select required id="educationLevel" name="educationLevel" value={educationLevel} onChange={e => setEducationLevel(e.target.value)} className="w-full bg-[#111] border border-white/10 rounded-xl px-5 py-4 text-white focus:outline-none focus:border-teal-green transition-colors appearance-none">
                             <option value="UG">Undergraduate (UG)</option>
                             <option value="PG">Postgraduate (PG)</option>
                           </select>
                         </div>
                         <div>
-                          <label htmlFor="department" className="block text-xs uppercase tracking-widest text-white/50 font-bold mb-2">Department / Major</label>
-                          <input required id="department" name="department" type="text" placeholder="e.g. Computer Science" value={department} onChange={e => setDepartment(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-white focus:outline-none focus:border-teal-green transition-colors" />
+                          <label htmlFor="department" className="block text-xs uppercase tracking-widest text-white/50 font-bold mb-1.5">Department / Major</label>
+                          <input required id="department" name="department" type="text" placeholder="e.g. Computer Science, Electronics" value={department} onChange={e => setDepartment(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-white focus:outline-none focus:border-teal-green transition-colors" />
+                          <span className="text-[10px] text-white/30 mt-1 block">For credential prints and certification mappings.</span>
                         </div>
                       </div>
                       <div>
-                        <label htmlFor="internshipDomain" className="block text-xs uppercase tracking-widest text-white/50 font-bold mb-2">Internship Domain Needed</label>
-                        <select required id="internshipDomain" name="internshipDomain" value={internshipDomain} onChange={e => setInternshipDomain(e.target.value)} className="w-full bg-[#111] border border-white/10 rounded-xl px-5 py-4 text-white focus:outline-none focus:border-teal-green transition-colors appearance-none">
+                        <label htmlFor="internshipDomain" className="block text-xs uppercase tracking-widest text-white/50 font-bold mb-1.5">Internship Domain Needed</label>
+                        <select 
+                          required 
+                          id="internshipDomain" 
+                          name="internshipDomain" 
+                          value={internshipDomain} 
+                          onChange={e => {
+                            setInternshipDomain(e.target.value);
+                            const matched = allInternships.find(i => i.title === e.target.value);
+                            if (matched) setCourseData(matched);
+                          }} 
+                          className="w-full bg-[#111] border border-white/10 rounded-xl px-5 py-4 text-white focus:outline-none focus:border-teal-green transition-colors appearance-none"
+                        >
                           {allInternships.map((c, i) => (
                             <option key={i} value={c.title}>{c.title}</option>
                           ))}
                         </select>
+                        <span className="text-[10px] text-white/30 mt-1 block">Dynamic selection changes pricing & custom coupons live below!</span>
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
                         <div>
-                          <label htmlFor="duration" className="block text-xs uppercase tracking-widest text-white/50 font-bold mb-2">Duration Needed</label>
+                          <label htmlFor="duration" className="block text-xs uppercase tracking-widest text-white/50 font-bold mb-1.5">Duration Needed</label>
                           <select required id="duration" name="duration" value={duration} onChange={e => setDuration(e.target.value)} className="w-full bg-[#111] border border-white/10 rounded-xl px-5 py-4 text-white focus:outline-none focus:border-teal-green transition-colors appearance-none">
                             <option value="" disabled>Select Duration</option>
                             <option value="15 Days">15 Days</option>
@@ -303,9 +580,10 @@ export default function RegistrationPage() {
                             <option value="3 Months">3 Months</option>
                             <option value="6 Months">6 Months</option>
                           </select>
+                          <span className="text-[10px] text-white/30 mt-1 block">Approved timeline duration.</span>
                         </div>
                         <div>
-                          <label htmlFor="projectType" className="block text-xs uppercase tracking-widest text-white/50 font-bold mb-2">Project Type</label>
+                          <label htmlFor="projectType" className="block text-xs uppercase tracking-widest text-white/50 font-bold mb-1.5">Project Type</label>
                           <select required id="projectType" name="projectType" value={projectType} onChange={e => setProjectType(e.target.value)} className="w-full bg-[#111] border border-white/10 rounded-xl px-5 py-4 text-white focus:outline-none focus:border-teal-green transition-colors appearance-none">
                             <option value="" disabled>Select Project</option>
                             <option value="Mini Project">Mini Project</option>
@@ -317,18 +595,55 @@ export default function RegistrationPage() {
                     </>
                   )}
                   
+                  {/* Coupon & Live Price Billing Summary Section */}
+                  {courseData && courseData.price > 0 && (
+                    <div className="space-y-6">
+                      {renderCouponSection()}
+
+                      {/* Live Billing Summary */}
+                      <div className="bg-black/30 border border-white/5 p-4 rounded-xl space-y-3 text-sm">
+                        <div className="flex justify-between items-center text-white/60">
+                          <span>Base Program Fee</span>
+                          <span className="font-mono">₹{basePrice}</span>
+                        </div>
+                        {calculatedPricing?.isApplied && (
+                          <div className="flex justify-between items-center text-teal-green">
+                            <span>Coupon Discount applied ({appliedCoupon})</span>
+                            <span className="font-mono font-bold">-₹{basePrice - finalPrice}</span>
+                          </div>
+                        )}
+                        <div className="flex justify-between items-center border-t border-white/5 pt-3 font-bold text-white">
+                          <span>Final Program Cost</span>
+                          <span className="text-lg font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-electric-blue">₹{finalPrice}</span>
+                        </div>
+
+                        {regFee > 0 && (
+                          <div className="mt-2 pt-2 border-t border-dashed border-white/10 space-y-2">
+                            <div className="flex justify-between items-center text-xs text-orange-400 font-bold">
+                              <span>Advance Registration Fee (Payable Now)</span>
+                              <span>₹{regFee}</span>
+                            </div>
+                            <div className="flex justify-between items-center text-xs text-white/50">
+                              <span>Balance Due on Day</span>
+                              <span>₹{dueLater}</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                   {status === 'error' && (
                     <div className="bg-red-500/10 border border-red-500/50 text-red-400 p-4 rounded-xl text-center font-bold animate-pulse">
                       {errorMessage}
                     </div>
                   )}
 
-                  
-                    <button disabled={status === 'loading'} type="submit" className={`w-full mt-6 py-5 ${actualType === 'course' ? 'bg-gradient-to-r from-electric-blue to-teal-green shadow-[0_0_20px_rgba(0,229,255,0.4)] hover:shadow-[0_0_30px_rgba(0,229,255,0.6)] text-dark-black' : 'bg-white shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:shadow-[0_0_30px_rgba(255,255,255,0.4)] text-dark-black'} font-extrabold text-lg rounded-xl transition-all flex justify-center items-center`}>
-                      {status === 'loading' ? (
-                        <svg className="animate-spin h-6 w-6 text-dark-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                      ) : (actualType === 'course' && courseData?.price > 0 ? "Proceed to Payment" : "Confirm Registration")}
-                    </button>
+                  <button disabled={status === 'loading'} type="submit" className={`w-full mt-6 py-5 ${actualType === 'course' ? 'bg-gradient-to-r from-electric-blue to-teal-green shadow-[0_0_20px_rgba(0,229,255,0.4)] hover:shadow-[0_0_30px_rgba(0,229,255,0.6)] text-dark-black' : 'bg-white shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:shadow-[0_0_30px_rgba(255,255,255,0.4)] text-dark-black'} font-extrabold text-lg rounded-xl transition-all flex justify-center items-center`}>
+                    {status === 'loading' ? (
+                      <svg className="animate-spin h-6 w-6 text-dark-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    ) : (actualType === 'course' && finalPrice > 0 ? "Proceed to Payment" : "Confirm Registration")}
+                  </button>
                 </form>
               )}
           </div>

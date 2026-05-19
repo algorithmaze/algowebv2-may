@@ -30,5 +30,41 @@
     "id": "1778999920592",
     "date": "2026-05-17T06:38:40.592Z",
     "refNo": "AMAI_CASH_2605_002"
+  },
+  {
+    "type": "course",
+    "name": "ANTONY ROBINSON S",
+    "email": "algorithmazeai@gmail.com",
+    "phone": "8056718691",
+    "dob": "2015-05-05",
+    "studying": "1",
+    "leadDetails": "11",
+    "course": "Summer Robotics Bootcamp '26",
+    "status": "Applied",
+    "paymentStatus": "Pay on Day",
+    "paymentId": "",
+    "amountPaid": 0,
+    "amountDue": 749.5,
+    "id": "1779106001525",
+    "date": "2026-05-18T12:06:41.525Z",
+    "refNo": "AM-Co-26-05-0003"
+  },
+  {
+    "type": "course",
+    "name": "Algorithmaze AI",
+    "email": "algorithmazeai@gmail.com",
+    "phone": "8056718691",
+    "dob": "2015-05-05",
+    "studying": "1",
+    "leadDetails": "11",
+    "course": "Summer Robotics Bootcamp '26",
+    "status": "Applied",
+    "paymentStatus": "Pay on Day",
+    "paymentId": "",
+    "amountPaid": 0,
+    "amountDue": 1124.25,
+    "id": "1779106819157",
+    "date": "2026-05-18T12:20:19.157Z",
+    "refNo": "AM-Co-26-05-0004"
   }
 ]

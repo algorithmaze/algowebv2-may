@@ -160,6 +160,23 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleUpdateDisplayOrder = async (course: any, newOrder: number) => {
+    try {
+      const updated = { ...course, displayOrder: newOrder };
+      const res = await fetch(`${API_BASE_URL}/api/courses/${course.slug}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updated)
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setCourses(prev => prev.map(c => c.slug === course.slug ? data.course : c).sort((a, b) => (a.displayOrder || 99) - (b.displayOrder || 99)));
+      }
+    } catch (err) {
+      console.error('Failed to update display order', err);
+    }
+  };
+
   const filteredApps = apps.filter(app => {
     if (activeTab === 'course') return app.type === 'course' || !app.type; // fallback for old data
     if (activeTab === 'internship') return app.type === 'internship';
@@ -287,7 +304,22 @@ export default function AdminDashboard() {
                 {(activeTab === 'manage-courses' || activeTab === 'manage-internships') ? (courses || []).filter(c => c && (activeTab === 'manage-internships' ? c.type === 'internship' : c.type !== 'internship')).map(course => (
                   <tr key={course.slug} className="hover:bg-white/5 transition-colors">
                     <td className="p-6 text-sm whitespace-nowrap">
-                      {course.displayOrder || 99}
+                      <div className="flex items-center gap-2">
+                        <input 
+                          type="number" 
+                          value={course.displayOrder ?? 99}
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value) || 0;
+                            setCourses(prev => prev.map(c => c.slug === course.slug ? { ...c, displayOrder: val } : c));
+                          }}
+                          onBlur={(e) => {
+                            const val = parseInt(e.target.value) || 0;
+                            handleUpdateDisplayOrder(course, val);
+                          }}
+                          className="w-16 bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-white text-center font-extrabold focus:border-electric-blue focus:ring-1 focus:ring-electric-blue outline-none transition-all cursor-pointer"
+                          title="Click and type to change rank, press Tab or click outside to save order"
+                        />
+                      </div>
                     </td>
                     <td className="p-6 text-sm font-bold text-orange-400 whitespace-nowrap">
                       {course.title || course.name || course.slug || 'Unnamed'}
@@ -472,6 +504,19 @@ function EditModal({ record, onClose, onSave, isCourse, isInternship }: { record
       data.durationType = parts.slice(1).join(' ') || 'Days';
     }
     if (!data.durationType) data.durationType = 'Days';
+
+    // Migrate old single coupon to new array format if it exists and array is empty
+    if (data && !data.coupons && data.discountCode) {
+       data.coupons = [{
+          code: data.discountCode,
+          type: data.discountType || 'percent',
+          value: data.discountValue || 0,
+          isActive: true
+       }];
+    } else if (!data.coupons) {
+       data.coupons = [];
+    }
+
     return data;
   });
   const [activeCourseTab, setActiveCourseTab] = useState<'add' | 'category'>('add');
@@ -479,41 +524,44 @@ function EditModal({ record, onClose, onSave, isCourse, isInternship }: { record
   if (isCourse) {
     if (activeCourseTab === 'add') {
       return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto">
-          <div className="bg-[#111] border border-white/10 rounded-2xl w-full max-w-5xl shadow-[0_0_50px_rgba(0,229,255,0.15)] my-8 text-white transform animate-in zoom-in-95">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+          <div className="bg-[#111] border border-white/10 rounded-2xl w-full max-w-5xl shadow-[0_0_50px_rgba(0,229,255,0.15)] text-white transform animate-in zoom-in-95 flex flex-col max-h-[90vh] overflow-hidden">
             
-            {/* Header */}
-            <div className="bg-white/5 border-b border-white/10 text-center py-6 rounded-t-2xl relative">
-              <h2 className="text-2xl font-extrabold flex items-center justify-center gap-3 text-transparent bg-clip-text bg-gradient-to-r from-electric-blue to-teal-green">
-                <span className="text-white">{isInternship ? '💼' : '🚀'}</span> {formData.slug ? `Edit ${isInternship ? 'Internship' : 'Course'}` : `Add New ${isInternship ? 'Internship' : 'Course'}`}
-              </h2>
-              <p className="text-white/50 text-sm mt-2 font-medium">Configure program details, pricing, schedule, and availability</p>
-              <button onClick={onClose} className="absolute top-5 right-6 text-white/40 hover:text-white transition-colors text-2xl">✕</button>
-            </div>
-
-            {/* Form Content */}
-            <div className="p-8 pt-6">
-              
-              {/* Tabs */}
-              <div className="flex border-b border-white/10 mb-8 pb-4 gap-4 overflow-x-auto scrollbar-hide">
-                 <button onClick={() => setActiveCourseTab('add')} className="px-6 py-2.5 bg-electric-blue/10 border-electric-blue/30 text-electric-blue shadow-[0_0_15px_rgba(0,229,255,0.2)] font-bold rounded-xl whitespace-nowrap flex items-center gap-2 transition-all">
-                   <span className="text-xl leading-none">+</span> {formData.slug ? 'Edit Program' : 'Add Program'}
-                 </button>
-                 <button onClick={() => setActiveCourseTab('category')} className="px-6 py-2.5 bg-white/5 border-white/10 text-white/70 font-bold rounded-xl hover:bg-white/10 whitespace-nowrap flex items-center gap-2 transition-colors">
-                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg> Edit Categories
-                 </button>
+            {/* Stationary Header & Tab Selector */}
+            <div className="bg-white/5 border-b border-white/10 p-6 rounded-t-2xl relative shrink-0 space-y-4">
+              <div className="text-center">
+                <h2 className="text-2xl font-extrabold flex items-center justify-center gap-3 text-transparent bg-clip-text bg-gradient-to-r from-electric-blue to-teal-green">
+                  <span className="text-white">{isInternship ? '💼' : '🚀'}</span> {formData.slug ? `Edit ${isInternship ? 'Internship' : 'Course'}` : `Add New ${isInternship ? 'Internship' : 'Course'}`}
+                </h2>
+                <p className="text-white/50 text-xs mt-1.5 font-medium">Configure program details, pricing, schedule, and availability</p>
+                <button onClick={onClose} className="absolute top-5 right-6 text-white/40 hover:text-white transition-colors text-2xl">✕</button>
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-10 gap-y-8">
+              {/* Tabs */}
+              <div className="flex gap-4 overflow-x-auto scrollbar-hide pt-1">
+                 <button type="button" onClick={() => setActiveCourseTab('add')} className="px-5 py-2 bg-electric-blue/10 border border-electric-blue/30 text-electric-blue shadow-[0_0_15px_rgba(0,229,255,0.2)] font-bold rounded-xl whitespace-nowrap flex items-center gap-2 transition-all text-xs">
+                   <span className="text-lg leading-none">+</span> {formData.slug ? 'Edit Program' : 'Add Program'}
+                 </button>
+                 <button type="button" onClick={() => setActiveCourseTab('category')} className="px-5 py-2 bg-white/5 border border-white/10 text-white/70 font-bold rounded-xl hover:bg-white/10 whitespace-nowrap flex items-center gap-2 transition-colors text-xs">
+                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg> Edit Categories
+                 </button>
+              </div>
+            </div>
+
+            {/* Scrollable Form Content */}
+            <div className="p-8 overflow-y-auto flex-grow space-y-6 scrollbar-thin scrollbar-thumb-white/10" data-lenis-prevent="true">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 
-                {/* Basic Details */}
-                <div className="space-y-6">
-                  <h3 className="text-lg font-bold text-white border-b border-white/10 pb-2 mb-4">Basic Details</h3>
+                {/* Basic Details Card */}
+                <div className="bg-white/[0.02] border border-white/5 backdrop-blur-md rounded-2xl p-6 space-y-6 hover:border-white/10 transition-all shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]">
+                  <h3 className="text-lg font-black tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-electric-blue to-cyan-400 border-b border-white/10 pb-3 flex items-center gap-2">
+                    <span>✨</span> Basic Information
+                  </h3>
                   
                   <div>
-                    <label className="block text-xs font-bold uppercase tracking-widest text-white/50 mb-2">{isInternship ? 'Internship Domain Name *' : 'Program Name *'}</label>
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-white/80 mb-2">{isInternship ? 'Internship Domain Name *' : 'Program Name *'}</label>
                     <input 
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-electric-blue transition-all"
+                      className="w-full bg-black/40 border border-white/20 rounded-xl px-4 py-3.5 text-white text-sm focus:outline-none focus:border-electric-blue focus:bg-black/60 hover:bg-black/50 hover:border-white/30 transition-all font-semibold"
                       value={formData.title || formData.name || ''}
                       onChange={e => setFormData({...formData, title: e.target.value, name: e.target.value})}
                       placeholder={isInternship ? "e.g. AI & Fullstack" : "e.g. Summer AI Bootcamp '26"}
@@ -521,9 +569,9 @@ function EditModal({ record, onClose, onSave, isCourse, isInternship }: { record
                   </div>
                   
                   <div>
-                    <label className="block text-xs font-bold uppercase tracking-widest text-white/50 mb-2">Description *</label>
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-white/80 mb-2">Description *</label>
                     <textarea 
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-electric-blue transition-all resize-none h-[120px]"
+                      className="w-full bg-black/40 border border-white/20 rounded-xl px-4 py-3.5 text-white text-sm focus:outline-none focus:border-electric-blue focus:bg-black/60 hover:bg-black/50 hover:border-white/30 transition-all font-semibold resize-none h-[120px]"
                       value={formData.desc || formData.description || formData.details || ''}
                       onChange={e => setFormData({...formData, desc: e.target.value, description: e.target.value})}
                       placeholder="A short, catchy description..."
@@ -531,9 +579,9 @@ function EditModal({ record, onClose, onSave, isCourse, isInternship }: { record
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold uppercase tracking-widest text-white/50 mb-2">Key Features / Topics (Comma separated)</label>
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-white/80 mb-2">Key Features / Topics (Comma separated)</label>
                     <textarea 
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-electric-blue transition-all resize-none h-[100px]"
+                      className="w-full bg-black/40 border border-white/20 rounded-xl px-4 py-3.5 text-white text-sm focus:outline-none focus:border-electric-blue focus:bg-black/60 hover:bg-black/50 hover:border-white/30 transition-all font-semibold resize-none h-[100px]"
                       value={Array.isArray(formData.features) ? formData.features.join(', ') : (formData.features || '')}
                       onChange={e => setFormData({...formData, features: e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean)})}
                       placeholder="e.g. Build Robots, Learn Python, Certificate Included..."
@@ -541,9 +589,9 @@ function EditModal({ record, onClose, onSave, isCourse, isInternship }: { record
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold uppercase tracking-widest text-white/50 mb-2">Cover Image URL</label>
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-white/80 mb-2">Cover Image URL</label>
                     <input 
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-electric-blue transition-all"
+                      className="w-full bg-black/40 border border-white/20 rounded-xl px-4 py-3.5 text-white text-sm focus:outline-none focus:border-electric-blue focus:bg-black/60 hover:bg-black/50 hover:border-white/30 transition-all font-semibold"
                       value={formData.imageUrl || ''}
                       onChange={e => setFormData({...formData, imageUrl: e.target.value})}
                       placeholder="https://example.com/image.png"
@@ -551,15 +599,20 @@ function EditModal({ record, onClose, onSave, isCourse, isInternship }: { record
                   </div>
                 </div>
 
-                {/* Logistics & Pricing */}
+                {/* Right Column */}
                 <div className="space-y-6">
-                  <h3 className="text-lg font-bold text-white border-b border-white/10 pb-2 mb-4">Logistics & Configuration</h3>
+
+                  {/* Logistics & Configuration Card */}
+                <div className="bg-white/[0.02] border border-white/5 backdrop-blur-md rounded-2xl p-6 space-y-6 hover:border-white/10 transition-all shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]">
+                  <h3 className="text-lg font-black tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-amber-300 border-b border-white/10 pb-3 flex items-center gap-2">
+                    <span>🛠️</span> Logistics & Setup
+                  </h3>
                   
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-bold uppercase tracking-widest text-white/50 mb-2">Program Type</label>
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-white/80 mb-2">Program Type</label>
                       <select 
-                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-electric-blue appearance-none cursor-pointer"
+                        className="w-full bg-black/40 border border-white/20 rounded-xl px-4 py-3.5 text-white text-sm focus:outline-none focus:border-electric-blue focus:bg-[#0c0d12] hover:bg-black/50 hover:border-white/30 transition-all cursor-pointer outline-none font-semibold"
                         value={formData.type || (isInternship ? 'internship' : 'course')}
                         onChange={e => setFormData({...formData, type: e.target.value})}
                       >
@@ -571,9 +624,9 @@ function EditModal({ record, onClose, onSave, isCourse, isInternship }: { record
                       </select>
                     </div>
                     <div>
-                      <label className="block text-xs font-bold uppercase tracking-widest text-white/50 mb-2">Category</label>
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-white/80 mb-2">Category</label>
                       <select 
-                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-electric-blue appearance-none cursor-pointer"
+                        className="w-full bg-black/40 border border-white/20 rounded-xl px-4 py-3.5 text-white text-sm focus:outline-none focus:border-electric-blue focus:bg-[#0c0d12] hover:bg-black/50 hover:border-white/30 transition-all cursor-pointer outline-none font-semibold"
                         value={formData.category || ''}
                         onChange={e => setFormData({...formData, category: e.target.value})}
                       >
@@ -589,9 +642,9 @@ function EditModal({ record, onClose, onSave, isCourse, isInternship }: { record
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-bold uppercase tracking-widest text-white/50 mb-2">Mode</label>
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-white/80 mb-2">Mode</label>
                       <select 
-                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-electric-blue appearance-none cursor-pointer"
+                        className="w-full bg-black/40 border border-white/20 rounded-xl px-4 py-3.5 text-white text-sm focus:outline-none focus:border-electric-blue focus:bg-[#0c0d12] hover:bg-black/50 hover:border-white/30 transition-all cursor-pointer outline-none font-semibold"
                         value={formData.mode || 'Offline'}
                         onChange={e => setFormData({...formData, mode: e.target.value, isOnline: e.target.value === 'Online'})}
                       >
@@ -601,26 +654,26 @@ function EditModal({ record, onClose, onSave, isCourse, isInternship }: { record
                       </select>
                     </div>
                     <div>
-                      <label className="block text-xs font-bold uppercase tracking-widest text-white/50 mb-2">Duration</label>
-                      <div className="flex bg-[#111] border border-white/10 rounded-xl overflow-hidden focus-within:border-electric-blue transition-all h-[46px]">
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-white/80 mb-2">Duration</label>
+                      <div className="flex bg-black/40 border border-white/20 rounded-xl overflow-hidden focus-within:border-electric-blue transition-all h-[48px]">
                         <input 
                           type="number"
-                          className="w-full bg-transparent px-4 py-2 text-white focus:outline-none"
+                          className="w-full bg-transparent px-4 py-3 text-white text-sm focus:outline-none font-semibold"
                           value={formData.durationValue || ''}
                           onChange={e => setFormData({...formData, durationValue: e.target.value, duration: `${e.target.value} ${formData.durationType || 'Days'}`})}
                           placeholder="e.g. 10"
                         />
-                        <div className="flex border-l border-white/10">
+                        <div className="flex border-l border-white/20">
                           <button 
                             type="button"
-                            className={`px-3 py-2 text-xs font-bold transition-colors ${formData.durationType === 'Days' ? 'bg-electric-blue/20 text-electric-blue' : 'text-white/50 hover:bg-white/5 hover:text-white'}`}
+                            className={`px-3 py-2 text-xs font-black uppercase tracking-wider transition-colors ${formData.durationType === 'Days' ? 'bg-electric-blue/20 text-electric-blue' : 'text-white/40 hover:bg-white/5 hover:text-white'}`}
                             onClick={() => setFormData({...formData, durationType: 'Days', duration: `${formData.durationValue || ''} Days`})}
                           >
                             Days
                           </button>
                           <button 
                             type="button"
-                            className={`px-3 py-2 text-xs font-bold transition-colors border-l border-white/10 ${formData.durationType === 'Hours' ? 'bg-electric-blue/20 text-electric-blue' : 'text-white/50 hover:bg-white/5 hover:text-white'}`}
+                            className={`px-3 py-2 text-xs font-black uppercase tracking-wider transition-colors border-l border-white/20 ${formData.durationType === 'Hours' ? 'bg-electric-blue/20 text-electric-blue' : 'text-white/40 hover:bg-white/5 hover:text-white'}`}
                             onClick={() => setFormData({...formData, durationType: 'Hours', duration: `${formData.durationValue || ''} Hours`})}
                           >
                             Hours
@@ -632,9 +685,9 @@ function EditModal({ record, onClose, onSave, isCourse, isInternship }: { record
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-bold uppercase tracking-widest text-white/50 mb-2">Available Slots/Seats</label>
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-white/80 mb-2">Available Slots/Seats</label>
                       <input 
-                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-electric-blue"
+                        className="w-full bg-black/40 border border-white/20 rounded-xl px-4 py-3.5 text-white text-sm focus:outline-none focus:border-electric-blue focus:bg-[#0c0d12] hover:bg-black/50 hover:border-white/30 transition-all font-semibold"
                         value={formData.seats || ''}
                         onChange={e => setFormData({...formData, seats: e.target.value})}
                         placeholder="e.g. 50"
@@ -642,22 +695,28 @@ function EditModal({ record, onClose, onSave, isCourse, isInternship }: { record
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold uppercase tracking-widest text-white/50 mb-2">Syllabus PDF URL</label>
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-white/80 mb-2">Syllabus PDF URL</label>
                       <input 
-                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-electric-blue"
+                        className="w-full bg-black/40 border border-white/20 rounded-xl px-4 py-3.5 text-white text-sm focus:outline-none focus:border-electric-blue focus:bg-[#0c0d12] hover:bg-black/50 hover:border-white/30 transition-all font-semibold"
                         value={formData.syllabusUrl || ''}
                         onChange={e => setFormData({...formData, syllabusUrl: e.target.value})}
                         placeholder="Link to syllabus..."
                       />
                     </div>
                   </div>
+                </div>
 
-                  {!isInternship && (
-                    <div className="grid grid-cols-3 gap-4 border border-white/5 bg-white/5 p-4 rounded-xl mt-6">
+                  {/* Financial Configuration */}
+                  <div className="bg-white/[0.03] border border-white/15 p-5 rounded-2xl space-y-4 shadow-[inset_0_1px_1px_rgba(255,255,255,0.02)]">
+                    <h4 className="text-xs font-black uppercase tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-teal-green to-cyan-400 flex items-center gap-1.5">
+                      <span>💰</span> Pricing & Advance setup
+                    </h4>
+                    
+                    <div className="grid grid-cols-3 gap-3">
                       <div>
-                        <label className="block text-[10px] font-bold uppercase tracking-widest text-teal-green mb-2">Course Fee (₹)</label>
+                        <label className="block text-[10px] font-bold uppercase tracking-wider text-white/75 mb-2">Base Fee (₹)</label>
                         <input 
-                          className="w-full bg-[#111] border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-teal-green"
+                          className="w-full bg-black/50 border border-white/20 rounded-xl px-3 py-2.5 text-white font-bold focus:outline-none focus:border-teal-green focus:bg-black/80 hover:bg-black/60 transition-all text-xs"
                           value={formData.price || ''}
                           onChange={e => setFormData({...formData, price: e.target.value})}
                           placeholder="Base Fee"
@@ -665,9 +724,9 @@ function EditModal({ record, onClose, onSave, isCourse, isInternship }: { record
                         />
                       </div>
                       <div>
-                        <label className="block text-[10px] font-bold uppercase tracking-widest text-orange-400 mb-2">Reg. Fee (₹) Fixed</label>
+                        <label className="block text-[10px] font-bold uppercase tracking-wider text-white/75 mb-2">Reg. Fixed (₹)</label>
                         <input 
-                          className="w-full bg-[#111] border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-orange-400"
+                          className="w-full bg-black/50 border border-white/20 rounded-xl px-3 py-2.5 text-white font-bold focus:outline-none focus:border-orange-400 focus:bg-black/80 hover:bg-black/60 transition-all text-xs"
                           value={formData.registerFeeFixed || ''}
                           onChange={e => setFormData({...formData, registerFeeFixed: e.target.value})}
                           placeholder="Advance"
@@ -675,9 +734,9 @@ function EditModal({ record, onClose, onSave, isCourse, isInternship }: { record
                         />
                       </div>
                       <div>
-                        <label className="block text-[10px] font-bold uppercase tracking-widest text-orange-400 mb-2">Reg. Fee (%)</label>
+                        <label className="block text-[10px] font-bold uppercase tracking-wider text-white/75 mb-2">Reg. Fee (%)</label>
                         <input 
-                          className="w-full bg-[#111] border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-orange-400"
+                          className="w-full bg-black/50 border border-white/20 rounded-xl px-3 py-2.5 text-white font-bold focus:outline-none focus:border-orange-400 focus:bg-black/80 hover:bg-black/60 transition-all text-xs"
                           value={formData.registerFeePercent || ''}
                           onChange={e => setFormData({...formData, registerFeePercent: e.target.value})}
                           placeholder="Percentage"
@@ -685,42 +744,112 @@ function EditModal({ record, onClose, onSave, isCourse, isInternship }: { record
                         />
                       </div>
                     </div>
-                  )}
 
-                  <div className="flex items-center space-x-6 pt-4">
-                    <label className="flex items-center space-x-3 cursor-pointer group">
-                      <div className={`w-6 h-6 rounded border flex items-center justify-center transition-all ${formData.isPreview ? 'bg-electric-blue border-electric-blue' : 'bg-[#111] border-white/20 group-hover:border-electric-blue/50'}`}>
-                        {formData.isPreview && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>}
+                    <div className="flex items-center space-x-6 pt-2">
+                      <label className="flex items-center space-x-3 cursor-pointer group">
+                        <div className={`w-[18px] h-[18px] rounded border flex items-center justify-center transition-all ${formData.isPreview ? 'bg-electric-blue border-electric-blue shadow-[0_0_10px_rgba(0,229,255,0.4)]' : 'bg-black/30 border-white/20 group-hover:border-electric-blue/50'}`}>
+                          {formData.isPreview && <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>}
+                        </div>
+                        <input type="checkbox" className="hidden" 
+                          checked={formData.isPreview || false}
+                          onChange={e => setFormData({...formData, isPreview: e.target.checked})}
+                        />
+                        <span className="text-xs font-bold text-white/70 group-hover:text-white transition-colors">Show as Upcoming / Preview Program</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Coupon Setup */}
+                  <div className="bg-white/[0.03] border border-white/15 p-5 rounded-2xl space-y-4 shadow-[inset_0_1px_1px_rgba(255,255,255,0.02)]">
+                    <div className="flex justify-between items-center border-b border-white/15 pb-3">
+                      <h4 className="text-xs font-black uppercase tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-rose-400 flex items-center gap-1.5">
+                        <span>🏷️</span> Active Coupon codes
+                      </h4>
+                      <button 
+                        type="button" 
+                        onClick={() => setFormData({...formData, coupons: [...(formData.coupons || []), { code: '', type: 'percent', value: 0, startDate: '', endDate: '', isActive: true }]})}
+                        className="px-4 py-2 bg-gradient-to-r from-pink-500/10 to-rose-500/10 hover:from-pink-500/20 hover:to-rose-500/20 text-rose-300 border border-rose-500/30 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-1.5 shadow-sm"
+                      >
+                        <span>+</span> Add Coupon
+                      </button>
+                    </div>
+                    
+                    {(formData.coupons || []).length === 0 ? (
+                      <p className="text-white/40 text-xs text-center py-6 italic font-medium">No coupons added yet. Click "+ Add Coupon" to configure discounts.</p>
+                    ) : (
+                      <div className="space-y-3 max-h-[320px] overflow-y-auto pr-1" data-lenis-prevent="true">
+                        {(formData.coupons || []).map((coupon: any, index: number) => (
+                          <div key={index} className="border border-white/10 bg-black/50 p-4.5 rounded-2xl relative group hover:border-white/20 transition-all space-y-3.5 shadow-inner">
+                             <div className="grid grid-cols-12 gap-3 items-end">
+                               <div className="col-span-3">
+                                 <label className="block text-[10px] font-bold uppercase tracking-wider text-white/80 mb-1.5">Code</label>
+                                 <input className="w-full bg-black/60 border border-white/20 rounded-xl px-3 py-2 text-white text-xs font-bold focus:border-electric-blue focus:bg-black/80 hover:bg-black/70 transition-all outline-none uppercase tracking-wider" placeholder="e.g. GET50" value={coupon.code} onChange={(e) => { const newC = [...formData.coupons]; newC[index].code = e.target.value.toUpperCase(); setFormData({...formData, coupons: newC}); }} />
+                               </div>
+                               <div className="col-span-4">
+                                 <label className="block text-[10px] font-bold uppercase tracking-wider text-white/80 mb-1.5">Type</label>
+                                 <select className="w-full bg-black/60 border border-white/20 rounded-xl px-2 py-2 text-white text-xs font-semibold focus:border-electric-blue focus:bg-black/80 hover:bg-black/70 transition-all outline-none cursor-pointer" value={coupon.type} onChange={(e) => { const newC = [...formData.coupons]; newC[index].type = e.target.value; setFormData({...formData, coupons: newC}); }}>
+                                   <option value="percent" className="bg-[#111]">Percent (%)</option>
+                                   <option value="flat" className="bg-[#111]">Flat (₹)</option>
+                                 </select>
+                               </div>
+                               <div className="col-span-2">
+                                 <label className="block text-[10px] font-bold uppercase tracking-wider text-white/80 mb-1.5">Value</label>
+                                 <input type="number" className="w-full bg-black/60 border border-white/20 rounded-xl px-3 py-2 text-white text-xs font-bold focus:border-electric-blue focus:bg-black/80 hover:bg-black/70 transition-all outline-none" placeholder="e.g. 50" value={coupon.value} onChange={(e) => { const newC = [...formData.coupons]; newC[index].value = Number(e.target.value); setFormData({...formData, coupons: newC}); }} />
+                               </div>
+                               <div className="col-span-3 flex items-center justify-between gap-1.5 h-[34px] pl-1">
+                                 <label className="flex items-center gap-1.5 cursor-pointer group/chk">
+                                   <div className={`w-[18px] h-[18px] rounded border flex items-center justify-center transition-all ${coupon.isActive !== false ? 'bg-electric-blue border-electric-blue shadow-[0_0_8px_rgba(0,229,255,0.4)]' : 'bg-black/40 border-white/25 group-hover/chk:border-electric-blue/50'}`}>
+                                     {coupon.isActive !== false && <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>}
+                                   </div>
+                                   <input type="checkbox" className="hidden" checked={coupon.isActive !== false} onChange={(e) => { const newC = [...formData.coupons]; newC[index].isActive = e.target.checked; setFormData({...formData, coupons: newC}); }} />
+                                   <span className="text-[10px] font-black uppercase tracking-wider text-white/80">Active</span>
+                                 </label>
+                                 <button type="button" onClick={() => { const newC = formData.coupons.filter((_:any, i:number) => i !== index); setFormData({...formData, coupons: newC}); }} className="text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/40 p-2 rounded-xl transition-all flex items-center justify-center" title="Delete Coupon">
+                                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                 </button>
+                                </div>
+                             </div>
+
+                             <div className="grid grid-cols-2 gap-3 pt-3 border-t border-white/10">
+                               <div>
+                                 <label className="block text-[10px] font-bold uppercase tracking-wider text-white/70 mb-1.5">Start Date</label>
+                                 <input type="date" className="w-full bg-black/60 border border-white/20 rounded-xl px-3 py-2 text-white text-[11px] font-bold focus:border-electric-blue focus:bg-black/80 hover:bg-black/70 cursor-pointer transition-all outline-none" value={coupon.startDate || ''} onChange={(e) => { const newC = [...formData.coupons]; newC[index].startDate = e.target.value; setFormData({...formData, coupons: newC}); }} />
+                               </div>
+                               <div>
+                                 <label className="block text-[10px] font-bold uppercase tracking-wider text-white/70 mb-1.5">Expiry Date</label>
+                                 <input type="date" className="w-full bg-black/60 border border-white/20 rounded-xl px-3 py-2 text-white text-[11px] font-bold focus:border-electric-blue focus:bg-black/80 hover:bg-black/70 cursor-pointer transition-all outline-none" value={coupon.endDate || ''} onChange={(e) => { const newC = [...formData.coupons]; newC[index].endDate = e.target.value; setFormData({...formData, coupons: newC}); }} />
+                               </div>
+                             </div>
+                          </div>
+                        ))}
                       </div>
-                      <input type="checkbox" className="hidden" 
-                        checked={formData.isPreview || false}
-                        onChange={e => setFormData({...formData, isPreview: e.target.checked})}
-                      />
-                      <span className="text-sm font-bold text-white/70 group-hover:text-white transition-colors">Show as Preview/Upcoming</span>
-                    </label>
+                    )}
                   </div>
 
                 </div>
-              </div>
 
-              {/* Footer Buttons */}
-              <div className="mt-10 flex justify-end gap-4 border-t border-white/10 pt-6">
-                <button 
-                  onClick={onClose} 
-                  className="px-8 py-4 bg-white/5 border border-white/10 text-white/70 font-bold rounded-xl hover:bg-white/10 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button 
-                  onClick={() => onSave(formData)} 
-                  className={`px-10 py-4 bg-gradient-to-r ${isInternship ? 'from-purple-500 to-pink-500 shadow-[0_0_20px_rgba(168,85,247,0.4)]' : 'from-electric-blue to-teal-green shadow-[0_0_20px_rgba(0,229,255,0.4)]'} text-dark-black font-extrabold rounded-xl hover:scale-105 transition-transform flex items-center gap-2`}
-                >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
-                  {formData.slug ? 'Save Changes' : (isInternship ? 'Add Internship' : 'Launch Course')}
-                </button>
               </div>
-
             </div>
+
+            {/* Stationary Footer Buttons */}
+            <div className="p-6 bg-black/40 border-t border-white/10 flex justify-end gap-4 rounded-b-2xl shrink-0">
+              <button 
+                type="button"
+                onClick={onClose} 
+                className="px-8 py-3.5 bg-white/5 border border-white/10 text-white/70 font-bold rounded-xl hover:bg-white/10 transition-colors text-sm"
+              >
+                Cancel
+              </button>
+              <button 
+                type="button"
+                onClick={() => onSave(formData)} 
+                className={`px-10 py-3.5 bg-gradient-to-r ${isInternship ? 'from-purple-500 to-pink-500 shadow-[0_0_20px_rgba(168,85,247,0.4)]' : 'from-electric-blue to-teal-green shadow-[0_0_20px_rgba(0,229,255,0.4)]'} text-dark-black font-extrabold rounded-xl hover:scale-105 transition-transform flex items-center gap-2 text-sm`}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                {formData.slug ? 'Save Changes' : (isInternship ? 'Add Internship' : 'Launch Course')}
+              </button>
+            </div>
+
           </div>
         </div>
       );
@@ -735,23 +864,25 @@ function EditModal({ record, onClose, onSave, isCourse, isInternship }: { record
       ];
 
       return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto">
-          <div className="bg-[#111] border border-white/10 rounded-2xl w-full max-w-4xl shadow-[0_0_50px_rgba(0,229,255,0.15)] my-8 text-white transform animate-in zoom-in-95 overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+          <div className="bg-[#111] border border-white/10 rounded-2xl w-full max-w-4xl shadow-[0_0_50px_rgba(0,229,255,0.15)] text-white transform animate-in zoom-in-95 flex flex-col max-h-[90vh] overflow-hidden">
             
-            <div className="p-8">
-              <div className="flex justify-between items-center mb-8 border-b border-white/10 pb-6">
-                <div>
-                  <h2 className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-electric-blue to-teal-green">Manage Categories</h2>
-                  <p className="text-white/50 text-sm mt-1">Organize and order how categories appear on the website</p>
-                </div>
-                <div className="flex gap-3">
-                   <button onClick={() => setActiveCourseTab('add')} className="px-5 py-2.5 bg-white/5 border border-white/10 text-white/70 rounded-xl font-bold hover:bg-white/10 transition-colors">Back to Course</button>
-                   <button onClick={onClose} className="px-5 py-2.5 bg-white/5 border border-white/10 text-white/70 rounded-xl font-bold hover:bg-white/10 transition-colors">Close</button>
-                </div>
+            {/* Stationary Header */}
+            <div className="p-6 bg-white/5 border-b border-white/10 flex justify-between items-center rounded-t-2xl shrink-0">
+              <div>
+                <h2 className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-electric-blue to-teal-green">Manage Categories</h2>
+                <p className="text-white/50 text-xs mt-1">Organize and order how categories appear on the website</p>
               </div>
+              <div className="flex gap-3">
+                 <button type="button" onClick={() => setActiveCourseTab('add')} className="px-4 py-2 bg-white/5 border border-white/10 text-white/70 rounded-xl font-bold hover:bg-white/10 transition-colors text-xs">Back to Course</button>
+                 <button type="button" onClick={onClose} className="px-4 py-2 bg-white/5 border border-white/10 text-white/70 rounded-xl font-bold hover:bg-white/10 transition-colors text-xs">Close</button>
+              </div>
+            </div>
 
-              <div className="mb-6">
-                <button className="px-6 py-3 border border-dashed border-electric-blue/50 text-electric-blue bg-electric-blue/5 font-bold rounded-xl hover:bg-electric-blue/10 transition-colors flex items-center gap-2">
+            {/* Scrollable Content */}
+            <div className="p-8 overflow-y-auto flex-grow space-y-6 scrollbar-thin scrollbar-thumb-white/10" data-lenis-prevent="true">
+              <div>
+                <button type="button" className="px-6 py-3 border border-dashed border-electric-blue/50 text-electric-blue bg-electric-blue/5 font-bold rounded-xl hover:bg-electric-blue/10 transition-colors flex items-center gap-2 text-xs">
                   <span className="text-xl leading-none">+</span> ADD NEW CATEGORY
                 </button>
               </div>
@@ -772,12 +903,12 @@ function EditModal({ record, onClose, onSave, isCourse, isInternship }: { record
                         <td className="p-5 text-white/70 font-mono">{cat.order}</td>
                         <td className="p-5 text-white font-bold">{cat.name}</td>
                         <td className="p-5">
-                          <input type="text" defaultValue={cat.order} className="w-16 p-2 bg-[#111] border border-white/20 rounded-lg text-center text-white focus:outline-none focus:border-electric-blue" />
+                          <input type="text" defaultValue={cat.order} className="w-16 p-2 bg-[#111] border border-white/20 rounded-lg text-center text-white focus:outline-none focus:border-electric-blue text-xs" />
                         </td>
                         <td className="p-5">
                           <div className="flex gap-4 text-white/40">
-                            <button className="hover:text-electric-blue transition-colors">↑</button>
-                            <button className="hover:text-electric-blue transition-colors">↓</button>
+                            <button type="button" className="hover:text-electric-blue transition-colors">↑</button>
+                            <button type="button" className="hover:text-electric-blue transition-colors">↓</button>
                           </div>
                         </td>
                       </tr>
@@ -785,14 +916,15 @@ function EditModal({ record, onClose, onSave, isCourse, isInternship }: { record
                   </tbody>
                 </table>
               </div>
-
-              <div className="mt-8 flex justify-end">
-                <button className="px-8 py-3 bg-electric-blue text-dark-black font-extrabold rounded-xl shadow-[0_0_20px_rgba(0,229,255,0.3)] hover:scale-105 transition-transform">
-                  SAVE ORDER
-                </button>
-              </div>
-
             </div>
+
+            {/* Stationary Footer */}
+            <div className="p-6 bg-black/40 border-t border-white/10 flex justify-end rounded-b-2xl shrink-0">
+              <button type="button" className="px-8 py-3 bg-electric-blue text-dark-black font-extrabold rounded-xl shadow-[0_0_20px_rgba(0,229,255,0.3)] hover:scale-105 transition-transform text-xs">
+                SAVE ORDER
+              </button>
+            </div>
+
           </div>
         </div>
       );
@@ -800,19 +932,21 @@ function EditModal({ record, onClose, onSave, isCourse, isInternship }: { record
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto">
-      <div className="bg-[#111] border border-white/10 rounded-[2.5rem] p-10 w-full max-w-xl shadow-[0_0_80px_rgba(0,0,0,0.8)] relative transform animate-in zoom-in-95">
-        <button onClick={onClose} className="absolute top-8 right-10 text-white/20 hover:text-white transition-colors text-2xl">✕</button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
+      <div className="bg-[#0b0c10] border border-white/15 rounded-[2rem] w-full max-w-xl shadow-[0_0_80px_rgba(0,229,255,0.15)] relative transform animate-in zoom-in-95 flex flex-col max-h-[85vh] overflow-hidden text-white">
+        <button onClick={onClose} className="absolute top-6 right-8 text-white/40 hover:text-white transition-colors text-2xl z-10">✕</button>
         
-        <div className="mb-10">
-          <div className="inline-block px-4 py-1.5 bg-electric-blue/10 border border-electric-blue/20 rounded-full text-[10px] font-black uppercase tracking-[0.2em] text-electric-blue mb-4">
+        {/* Stationary Header */}
+        <div className="p-8 pb-4 shrink-0 border-b border-white/5 bg-white/[0.01]">
+          <div className="inline-block px-4 py-1.5 bg-electric-blue/10 border border-electric-blue/20 rounded-full text-[10px] font-black uppercase tracking-[0.2em] text-electric-blue mb-4 shadow-sm">
             System Overwrite
           </div>
           <h2 className="text-3xl font-black text-white tracking-tight">Edit <span className="text-electric-blue">Record</span></h2>
-          <p className="text-white/30 text-xs mt-2 uppercase tracking-widest font-bold">Modifying Database Entry: {record.refNo || record.id}</p>
+          <p className="text-white/40 text-xs mt-2 uppercase tracking-wider font-bold">Modifying Database Entry: <span className="font-mono text-electric-blue/80">{record.refNo || record.id}</span></p>
         </div>
 
-        <div className="space-y-8 max-h-[55vh] overflow-y-auto pr-4 scrollbar-hide" data-lenis-prevent="true">
+        {/* Scrollable Content */}
+        <div className="p-8 pt-6 overflow-y-auto flex-grow space-y-6" data-lenis-prevent="true">
            {Object.keys(formData).map(key => {
              if (key === 'id' || key === 'date' || key === 'type' || key === 'slug' || key === 'price' || key === 'refNo' || key === 'status') return null;
              
@@ -820,17 +954,17 @@ function EditModal({ record, onClose, onSave, isCourse, isInternship }: { record
              
              return (
                <div key={key}>
-                 <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-white/30 mb-3 ml-1">{label}</label>
+                 <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-white/60 mb-2.5 ml-1">{label}</label>
                  {key === 'message' || key === 'leadDetails' || key === 'desc' || key === 'details' ? (
                    <textarea 
-                     className="w-full bg-white/5 border border-white/5 rounded-2xl px-5 py-4 text-white focus:outline-none focus:border-electric-blue transition-all resize-none font-medium leading-relaxed"
+                     className="w-full bg-black/40 border border-white/20 rounded-xl px-5 py-4 text-white focus:outline-none focus:border-electric-blue focus:bg-black/60 hover:bg-black/50 hover:border-white/30 transition-all resize-none font-medium leading-relaxed text-sm"
                      rows={4}
                      value={formData[key] || ''}
                      onChange={e => setFormData({...formData, [key]: e.target.value})}
                    />
                  ) : (
                    <input 
-                     className="w-full bg-white/5 border border-white/5 rounded-2xl px-5 py-4 text-white focus:outline-none focus:border-electric-blue transition-all font-bold"
+                     className="w-full bg-black/40 border border-white/20 rounded-xl px-5 py-4 text-white focus:outline-none focus:border-electric-blue focus:bg-black/60 hover:bg-black/50 hover:border-white/30 transition-all font-bold text-sm"
                      value={formData[key] || ''}
                      onChange={e => setFormData({...formData, [key]: e.target.value})}
                    />
@@ -838,11 +972,12 @@ function EditModal({ record, onClose, onSave, isCourse, isInternship }: { record
                </div>
              )
            })}
-        </div>
+         </div>
 
-        <div className="flex justify-end gap-5 mt-12 pt-8 border-t border-white/5">
-          <button onClick={onClose} className="px-8 py-4 bg-white/5 hover:bg-white/10 border border-white/5 rounded-2xl text-white/40 font-black text-xs uppercase tracking-widest transition-all">Discard</button>
-          <button onClick={() => onSave(formData)} className="px-10 py-4 bg-gradient-to-r from-electric-blue to-teal-green text-dark-black font-black text-xs uppercase tracking-widest rounded-2xl shadow-[0_20px_40px_rgba(0,229,255,0.2)] hover:scale-105 transition-transform">Commit Changes</button>
+        {/* Stationary Footer */}
+        <div className="p-8 bg-black/50 border-t border-white/10 flex justify-end gap-5 shrink-0 rounded-b-[2rem]">
+          <button type="button" onClick={onClose} className="px-8 py-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl text-white/70 font-black text-xs uppercase tracking-widest transition-all">Discard</button>
+          <button type="button" onClick={() => onSave(formData)} className="px-10 py-4 bg-gradient-to-r from-electric-blue to-teal-green text-dark-black font-black text-xs uppercase tracking-widest rounded-2xl shadow-[0_15px_30px_rgba(0,229,255,0.25)] hover:scale-105 transition-all">Commit Changes</button>
         </div>
       </div>
     </div>

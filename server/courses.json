@@ -1,30 +1,23 @@
 [
   {
-    "slug": "ai-mastery-bootcamp",
-    "title": "Summer AI Bootcamp '26",
-    "name": "Summer AI Bootcamp '26",
-    "type": "bootcamp",
-    "desc": "Master the future of intelligence. An intensive hands-on journey from Neural Networks to Generative AI agents, designed for the next generation of engineers.",
-    "details": "This elite bootcamp covers the core pillars of modern AI. You will build and deploy real-world LLM agents, computer vision systems, and predictive models using industry-standard frameworks.",
-    "level": "Elite / Advanced",
-    "duration": "15 Days",
-    "price": 1499,
-    "registerFeePercent": 10,
-    "registerFeeFixed": 150,
-    "discount": "EARLY BIRD",
-    "discountCode": "AMAI26",
-    "discountValue": 500,
-    "discountType": "fixed",
-    "seats": "12 Slots Left",
+    "slug": "ai-internship-track",
+    "title": "AI & Machine Learning Internship",
+    "name": "AI & Machine Learning Internship",
+    "type": "internship",
+    "desc": "Join our R&D wing to build cutting-edge AI agents and predictive systems. A research-heavy internship for high-performers.",
+    "details": "A research-focused internship track where you work on real-world AI problems. From data engineering to model deployment, experience the full lifecycle of AI production.",
+    "duration": "1-6 Months",
+    "level": "Research Level",
+    "price": 0,
     "features": [
-      "End-to-End Generative AI Projects",
-      "Deep Learning with PyTorch & TensorFlow",
-      "Neural Network Architecture Design",
-      "AI Agent Deployment & API Integration",
-      "Industrial Certification & Portfolio"
+      "Research & Development on Live Models",
+      "Dataset Engineering & Optimization",
+      "UGC/AICTE Compliant Certification",
+      "Mini/Major Project Mentorship",
+      "Placement Referrals to AI Firms"
     ],
     "displayOrder": 1,
-    "icon": "🤖"
+    "icon": "🧠"
   },
   {
     "slug": "robotics-iot-bootcamp",
@@ -50,8 +43,75 @@
       "Industrial Sensor Fusion",
       "Hardware Design & Prototyping"
     ],
+    "displayOrder": 1,
+    "icon": "⚡",
+    "durationValue": "15",
+    "durationType": "Days",
+    "coupons": [
+      {
+        "code": "5050",
+        "type": "percent",
+        "value": 50,
+        "isActive": true,
+        "startDate": "2026-05-18",
+        "endDate": "2026-05-23"
+      },
+      {
+        "code": "ARS",
+        "type": "percent",
+        "value": 25,
+        "startDate": "",
+        "endDate": "",
+        "isActive": true
+      }
+    ]
+  },
+  {
+    "slug": "iot-internship-track",
+    "title": "Industrial IoT & Embedded Internship",
+    "name": "Industrial IoT & Embedded Internship",
+    "type": "internship",
+    "desc": "Develop autonomous hardware solutions and smart industrial systems. Bridging the gap between theory and industrial automation.",
+    "details": "A hands-on hardware internship focused on building industrial-grade embedded systems and distributed IoT networks.",
+    "duration": "1-6 Months",
+    "level": "Industrial Level",
+    "price": 0,
+    "features": [
+      "Industrial Hardware Prototyping",
+      "RTOS & Firmware Development",
+      "UGC/AICTE Compliant Certification",
+      "Mini/Major Project Mentorship",
+      "Placement Referrals to Tech Firms"
+    ],
     "displayOrder": 2,
-    "icon": "⚡"
+    "icon": "📟"
+  },
+  {
+    "slug": "iot-industrial-workshop",
+    "title": "Industrial IoT Workshop",
+    "name": "Industrial IoT Workshop",
+    "type": "workshop",
+    "desc": "A fast-track intensive on industrial automation. Connect sensors to the cloud and build real-time monitoring systems in just 48 hours.",
+    "details": "This high-intensity workshop focuses on the practical application of IoT in industrial settings. Build a complete remote monitoring system from scratch.",
+    "level": "Crash Course",
+    "duration": "2 Days",
+    "price": 499,
+    "registerFeePercent": 10,
+    "registerFeeFixed": 50,
+    "discount": "COMMUNITY OFFER",
+    "discountCode": "WORK20",
+    "discountValue": 20,
+    "discountType": "percent",
+    "seats": "20 Seats",
+    "features": [
+      "MQTT & Cloud Protocol Integration",
+      "Real-time Data Visualization",
+      "Edge Computing Basics",
+      "Industrial Sensor Interfacing",
+      "Quick Prototyping Techniques"
+    ],
+    "displayOrder": 2,
+    "icon": "🛠️"
   },
   {
     "slug": "fullstack-ai-pro",
@@ -79,73 +139,6 @@
     ],
     "displayOrder": 3,
     "icon": "💻"
-  },
-  {
-    "slug": "iot-industrial-workshop",
-    "title": "Industrial IoT Workshop",
-    "name": "Industrial IoT Workshop",
-    "type": "workshop",
-    "desc": "A fast-track intensive on industrial automation. Connect sensors to the cloud and build real-time monitoring systems in just 48 hours.",
-    "details": "This high-intensity workshop focuses on the practical application of IoT in industrial settings. Build a complete remote monitoring system from scratch.",
-    "level": "Crash Course",
-    "duration": "2 Days",
-    "price": 499,
-    "registerFeePercent": 10,
-    "registerFeeFixed": 50,
-    "discount": "COMMUNITY OFFER",
-    "discountCode": "WORK20",
-    "discountValue": 20,
-    "discountType": "percent",
-    "seats": "20 Seats",
-    "features": [
-      "MQTT & Cloud Protocol Integration",
-      "Real-time Data Visualization",
-      "Edge Computing Basics",
-      "Industrial Sensor Interfacing",
-      "Quick Prototyping Techniques"
-    ],
-    "displayOrder": 4,
-    "icon": "🛠️"
-  },
-  {
-    "slug": "ai-internship-track",
-    "title": "AI & Machine Learning Internship",
-    "name": "AI & Machine Learning Internship",
-    "type": "internship",
-    "desc": "Join our R&D wing to build cutting-edge AI agents and predictive systems. A research-heavy internship for high-performers.",
-    "details": "A research-focused internship track where you work on real-world AI problems. From data engineering to model deployment, experience the full lifecycle of AI production.",
-    "duration": "1-6 Months",
-    "level": "Research Level",
-    "price": 0,
-    "features": [
-      "Research & Development on Live Models",
-      "Dataset Engineering & Optimization",
-      "UGC/AICTE Compliant Certification",
-      "Mini/Major Project Mentorship",
-      "Placement Referrals to AI Firms"
-    ],
-    "displayOrder": 1,
-    "icon": "🧠"
-  },
-  {
-    "slug": "iot-internship-track",
-    "title": "Industrial IoT & Embedded Internship",
-    "name": "Industrial IoT & Embedded Internship",
-    "type": "internship",
-    "desc": "Develop autonomous hardware solutions and smart industrial systems. Bridging the gap between theory and industrial automation.",
-    "details": "A hands-on hardware internship focused on building industrial-grade embedded systems and distributed IoT networks.",
-    "duration": "1-6 Months",
-    "level": "Industrial Level",
-    "price": 0,
-    "features": [
-      "Industrial Hardware Prototyping",
-      "RTOS & Firmware Development",
-      "UGC/AICTE Compliant Certification",
-      "Mini/Major Project Mentorship",
-      "Placement Referrals to Tech Firms"
-    ],
-    "displayOrder": 2,
-    "icon": "📟"
   },
   {
     "slug": "fullstack-internship-track",

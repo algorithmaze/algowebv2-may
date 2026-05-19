@@ -48,7 +48,7 @@ export default function SuccessPage() {
               <p className="text-white/40 text-xs uppercase tracking-widest font-bold mb-3">Your Unique Reference Number</p>
               <p className="text-4xl md:text-5xl font-mono font-black text-electric-blue tracking-tighter drop-shadow-[0_0_15px_rgba(0,229,255,0.3)]">{displayRefNo}</p>
               
-              {appData && (appData.paymentId || appData.paymentStatus || appData.amountPaid || appData.amountDue) && (
+              {appData && (appData.paymentId || appData.paymentStatus || Number(appData.amountPaid) > 0 || Number(appData.amountDue) > 0) && (
                 <div className="mt-8 pt-8 border-t border-white/10 grid grid-cols-1 sm:grid-cols-2 gap-4 text-left">
                   {appData.paymentId && (
                     <div className="bg-[#111] p-4 rounded-xl border border-white/5">
@@ -62,13 +62,13 @@ export default function SuccessPage() {
                       <p className={`font-bold ${appData.paymentStatus === 'Paid' ? 'text-electric-blue' : 'text-orange-400'}`}>{appData.paymentStatus}</p>
                     </div>
                   )}
-                  {appData.amountPaid && (
+                  {Number(appData.amountPaid) > 0 && (
                     <div className="bg-[#111] p-4 rounded-xl border border-white/5">
                       <p className="text-[10px] text-white/50 font-bold uppercase tracking-widest mb-1">Amount Paid</p>
                       <p className="font-bold text-white/90">₹{appData.amountPaid}</p>
                     </div>
                   )}
-                  {appData.amountDue && (
+                  {Number(appData.amountDue) > 0 && (
                     <div className="bg-[#111] p-4 rounded-xl border border-white/5">
                       <p className="text-[10px] text-white/50 font-bold uppercase tracking-widest mb-1">Amount Due</p>
                       <p className="font-bold text-white/90">₹{appData.amountDue}</p>

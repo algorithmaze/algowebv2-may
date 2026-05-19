@@ -65,13 +65,16 @@ const razorpay = new Razorpay({
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
+  host: 'smtp.gmail.com',
+  port: 465,
+  secure: true, // Use SSL/TLS
   auth: {
-    user: process.env.EMAIL_USER || 'your_email@gmail.com',
-    pass: process.env.EMAIL_PASS || 'your_app_password'
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
   }
 });
 
-const sendConfirmationEmail = async (email, name, course, refNo, paymentStatus, amount, isMessage = false, messageBody = '') => {
+const sendConfirmationEmail = async (email, name, course, refNo, paymentStatus, amount, isMessage = false, messageBody = '', extraData = {}) => {
   try {
     const adminEmail = 'algorithmazeai@gmail.com';
     let mailOptions;
@@ -84,22 +87,182 @@ const sendConfirmationEmail = async (email, name, course, refNo, paymentStatus, 
         html: `<h2>New Contact Inquiry</h2><p><strong>Name:</strong> ${name}</p><p><strong>Email:</strong> ${email}</p><p><strong>Phone:</strong> ${course}</p><p><strong>Message:</strong> ${messageBody}</p>`
       };
     } else {
+      const invoiceDate = new Date().toLocaleDateString('en-IN', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
+
+      const amtPaid = extraData.amountPaid || 0;
+      const amtDue = extraData.amountDue || 0;
+      const totalFee = Number(amtPaid) + Number(amtDue);
+      const isFullPayment = Number(amtDue) === 0 && Number(amtPaid) > 0;
+      const isPartPayment = Number(amtPaid) > 0 && Number(amtDue) > 0;
+      const isPayOnDay = paymentStatus === 'Pay on Day (Cash)' || extraData.paymentStatus === 'Pay on Day';
+      const isFree = paymentStatus === 'Free Registration' || extraData.paymentStatus === 'Free';
+
+      let invoiceStatusBadge = '';
+      if (isFullPayment) {
+        invoiceStatusBadge = `<span style="background-color: #00ffc6; color: #08080c; padding: 6px 14px; border-radius: 6px; font-size: 11px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; display: inline-block;">Fully Paid / Verified</span>`;
+      } else if (isPartPayment) {
+        invoiceStatusBadge = `<span style="background-color: #f59e0b; color: #08080c; padding: 6px 14px; border-radius: 6px; font-size: 11px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; display: inline-block;">Advance Paid / Balance Pending</span>`;
+      } else if (isPayOnDay) {
+        invoiceStatusBadge = `<span style="background-color: #3b82f6; color: #ffffff; padding: 6px 14px; border-radius: 6px; font-size: 11px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; display: inline-block;">Cash Booking / Pay on Spot</span>`;
+      } else if (isFree) {
+        invoiceStatusBadge = `<span style="background-color: #10b981; color: #ffffff; padding: 6px 14px; border-radius: 6px; font-size: 11px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; display: inline-block;">Free Registration</span>`;
+      } else {
+        invoiceStatusBadge = `<span style="background-color: #6b7280; color: #ffffff; padding: 6px 14px; border-radius: 6px; font-size: 11px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; display: inline-block;">Confirmed / Applied</span>`;
+      }
+
+      const htmlBody = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Registration Tax Invoice - AlgorithmazeAI</title>
+      </head>
+      <body style="margin: 0; padding: 0; background-color: #07070a; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #e2e8f0;">
+        <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 650px; background-color: #0b0c10; margin: 30px auto; border: 1px solid #1f2937; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,229,255,0.05);">
+          <!-- Glowing Header -->
+          <tr>
+            <td style="padding: 30px 40px; background: linear-gradient(135deg, #0f172a 0%, #020617 100%); border-bottom: 2px solid #00e5ff;">
+              <table width="100%" border="0" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td>
+                    <h1 style="margin: 0; font-size: 26px; font-weight: 900; color: #ffffff; letter-spacing: -0.5px;">ALGORITHMAZE<span style="color: #00e5ff;">AI</span></h1>
+                    <p style="margin: 4px 0 0 0; font-size: 10px; font-weight: 700; color: #94a3b8; letter-spacing: 2px; text-transform: uppercase;">Next-Gen AI & Tech Learning</p>
+                  </td>
+                  <td align="right">
+                    <p style="margin: 0; font-size: 13px; font-weight: 800; color: #00e5ff; text-transform: uppercase; letter-spacing: 1px;">TAX INVOICE</p>
+                    <p style="margin: 4px 0 0 0; font-size: 11px; font-weight: 600; color: #64748b; font-family: monospace;">${refNo}</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Invoice Details Card -->
+          <tr>
+            <td style="padding: 24px 40px; background-color: #0f172a; border-bottom: 1px solid #1f2937;">
+              <table width="100%" border="0" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td width="50%" style="vertical-align: top;">
+                    <p style="margin: 0 0 6px 0; font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 1px;">BILLED TO (STUDENT)</p>
+                    <p style="margin: 0 0 2px 0; font-size: 15px; font-weight: 800; color: #ffffff;">${name}</p>
+                    <p style="margin: 0 0 2px 0; font-size: 12px; color: #94a3b8; font-weight: 500;">${email}</p>
+                    <p style="margin: 0; font-size: 12px; color: #94a3b8; font-family: monospace;">${extraData.phone || ''}</p>
+                  </td>
+                  <td width="50%" align="right" style="vertical-align: top;">
+                    <p style="margin: 0 0 6px 0; font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 1px;">INVOICE DETAILS</p>
+                    <p style="margin: 0 0 4px 0; font-size: 12px; color: #94a3b8; font-weight: 500;"><strong>Date:</strong> ${invoiceDate}</p>
+                    <p style="margin: 0 0 8px 0; font-size: 12px; color: #94a3b8; font-weight: 500;"><strong>Payment Status:</strong> ${extraData.paymentStatus || 'Applied'}</p>
+                    <div style="margin-top: 4px;">${invoiceStatusBadge}</div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Product Details Table -->
+          <tr>
+            <td style="padding: 40px 40px 20px 40px;">
+              <table width="100%" border="0" cellpadding="0" cellspacing="0" style="border-collapse: collapse;">
+                <thead>
+                  <tr style="border-bottom: 2px solid #1f2937;">
+                    <th align="left" style="padding: 0 0 12px 0; font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px;">Item Description</th>
+                    <th align="center" style="padding: 0 0 12px 0; font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px;">Qty</th>
+                    <th align="right" style="padding: 0 0 12px 0; font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px;">Total Price</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style="border-bottom: 1px solid #1f2937;">
+                    <td style="padding: 16px 0; vertical-align: top;">
+                      <p style="margin: 0; font-size: 14px; font-weight: 800; color: #ffffff;">${course}</p>
+                      <p style="margin: 4px 0 0 0; font-size: 11px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Type: ${extraData.type === 'internship' ? 'Internship track' : 'Specialized Program'}</p>
+                      ${extraData.duration ? `<p style="margin: 2px 0 0 0; font-size: 11px; color: #64748b; font-weight: 500;">Duration: ${extraData.duration}</p>` : ''}
+                    </td>
+                    <td align="center" style="padding: 16px 0; font-size: 13px; font-weight: 700; color: #e2e8f0; vertical-align: top;">1</td>
+                    <td align="right" style="padding: 16px 0; font-size: 14px; font-weight: 800; color: #ffffff; vertical-align: top;">₹${totalFee}/-</td>
+                  </tr>
+
+                  <!-- Calculations -->
+                  <tr>
+                    <td colspan="2" align="right" style="padding: 16px 0 8px 0; font-size: 12px; font-weight: 600; color: #64748b;">Subtotal</td>
+                    <td align="right" style="padding: 16px 0 8px 0; font-size: 12px; font-weight: 700; color: #e2e8f0;">₹${totalFee}/-</td>
+                  </tr>
+                  <tr>
+                    <td colspan="2" align="right" style="padding: 8px 0; font-size: 12px; font-weight: 700; color: #00ffc6; border-bottom: 1px solid #1f2937;">Registration Fee Paid (Advance)</td>
+                    <td align="right" style="padding: 8px 0; font-size: 13px; font-weight: 900; color: #00ffc6; border-bottom: 1px solid #1f2937;">₹${amtPaid}/-</td>
+                  </tr>
+                  <tr>
+                    <td colspan="2" align="right" style="padding: 16px 0 0 0; font-size: 14px; font-weight: 900; color: #ffffff;">Balance Amount Due</td>
+                    <td align="right" style="padding: 16px 0 0 0; font-size: 16px; font-weight: 900; color: #ff5e62;">₹${amtDue}/-</td>
+                  </tr>
+                </tbody>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Next Steps Notification -->
+          <tr>
+            <td style="padding: 20px 40px 30px 40px;">
+              <div style="background-color: #0f172a; border-left: 3px solid #00e5ff; padding: 20px; border-radius: 8px; border: 1px solid #1f2937; border-left-width: 4px;">
+                <h4 style="margin: 0 0 8px 0; font-size: 13px; font-weight: 800; color: #ffffff; text-transform: uppercase; letter-spacing: 0.5px;">📋 Instructions for Enrollment</h4>
+                <p style="margin: 0; font-size: 12px; color: #94a3b8; font-weight: 500; line-height: 1.6;">
+                  ${isPayOnDay 
+                    ? `Please prepare a cash payment of <strong>₹${amtDue}</strong> to be submitted on the day of the class. Ensure to bring a physical copy or screenshot of this invoice.` 
+                    : isPartPayment 
+                    ? `Your advance seat registration of <strong>₹${amtPaid}</strong> is confirmed via transaction ID <strong>${extraData.paymentId || 'Verified'}</strong>. The remaining balance of <strong>₹${amtDue}</strong> must be paid upon program commencement.`
+                    : isFree 
+                    ? `Your registration is free. Our program administrator will schedule your onboarding.`
+                    : `Your program fee of <strong>₹${amtPaid}</strong> is fully verified. Your account is fully active!`
+                  }
+                </p>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Security and Seal -->
+          <tr>
+            <td style="padding: 0 40px 40px 40px;">
+              <table width="100%" border="0" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td width="60%" style="vertical-align: bottom;">
+                    <p style="margin: 0; font-size: 10px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">✓ Direct Banking Receipt Verified</p>
+                    <p style="margin: 2px 0 0 0; font-size: 10px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">✓ Certified SSL Secure Transaction</p>
+                  </td>
+                  <td width="40%" align="right" style="vertical-align: bottom;">
+                    <div style="text-align: right;">
+                      <p style="margin: 0 0 5px 0; font-size: 11px; font-weight: 700; color: #64748b; font-style: italic;">AlgorithmazeAI Center</p>
+                      <div style="border-top: 1px dashed #475569; padding-top: 5px; font-size: 9px; font-weight: 900; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px;">Authorized Signatory</div>
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Corporate Footer -->
+          <tr>
+            <td style="padding: 24px; background-color: #020617; border-top: 1px solid #1f2937; text-align: center;">
+              <p style="margin: 0; font-size: 11px; color: #475569; font-weight: 500;">© 2026 AlgorithmazeAI Platform. All rights reserved.</p>
+              <p style="margin: 4px 0 0 0; font-size: 10px; color: #475569; font-weight: 500;">Trichy, Tamil Nadu, India • support@algorithmazeai.com • +91 999 444 8888</p>
+            </td>
+          </tr>
+        </table>
+      </body>
+      </html>
+      `;
+
       mailOptions = {
         from: process.env.EMAIL_USER || 'your_email@gmail.com',
         to: email,
-        bcc: adminEmail, // Admin gets a copy
-        subject: `Registration Confirmed: ${course} - AlgorithmazeAI`,
-        html: `
-          <h2>Hi ${name},</h2>
-          <p>Your registration for <strong>${course}</strong> is confirmed!</p>
-          <ul>
-            <li><strong>Reference No:</strong> ${refNo}</li>
-            ${paymentStatus ? `<li><strong>Payment Status:</strong> ${paymentStatus}</li>` : ''}
-            ${amount && amount !== '0' ? `<li><strong>Amount:</strong> ₹${amount}/-</li>` : ''}
-          </ul>
-          ${paymentStatus === 'Pay on Day (Cash)' ? '<p>If you selected "Pay on Day", please bring the amount in cash on the first day of the program.</p>' : ''}
-          <p>Thank you,<br/>AlgorithmazeAI Team</p>
-        `
+        bcc: adminEmail,
+        subject: `Invoice & Enrollment Confirmed: ${course} - AlgorithmazeAI`,
+        html: htmlBody
       };
     }
     await transporter.sendMail(mailOptions);
@@ -151,7 +314,13 @@ apiRouter.get('/courses', async (req, res) => {
     try {
       const [rows] = await pool.query('SELECT * FROM programs ORDER BY displayOrder ASC');
       const courses = rows.map(r => {
-        const c = { ...r, features: typeof r.features === 'string' ? JSON.parse(r.features) : r.features, isPreview: !!r.isPreview, isOnline: !!r.isOnline };
+        const c = { 
+          ...r, 
+          features: typeof r.features === 'string' ? JSON.parse(r.features) : r.features,
+          coupons: typeof r.coupons === 'string' ? JSON.parse(r.coupons) : r.coupons,
+          isPreview: !!r.isPreview, 
+          isOnline: !!r.isOnline 
+        };
         if (c.price > 0 && !c.registerFeeFixed && !c.registerFeePercent) {
           c.registerFeePercent = 10;
         }
@@ -199,17 +368,19 @@ apiRouter.post('/courses', async (req, res) => {
       if (existing.length > 0) slug += '-' + Date.now();
       
       const featuresJson = JSON.stringify(newCourse.features || []);
+      const couponsJson = JSON.stringify(newCourse.coupons || []);
       
       await pool.query(
         `INSERT INTO programs 
-        (slug, title, name, description, features, durationValue, durationType, level, price, feeText, seats, discountText, discountCode, discountType, discountValue, type, category, displayOrder, mode, isOnline, imageUrl, syllabusUrl, isPreview, registerFeeFixed, registerFeePercent) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        (slug, title, name, description, features, durationValue, durationType, level, price, feeText, seats, discountText, discountCode, discountType, discountValue, type, category, displayOrder, mode, isOnline, imageUrl, syllabusUrl, isPreview, registerFeeFixed, registerFeePercent, coupons) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           slug, newCourse.title||'', newCourse.name||'', newCourse.desc||newCourse.description||'', featuresJson, 
           newCourse.durationValue||0, newCourse.durationType||'Days', newCourse.level||'', newCourse.price||0, newCourse.feeText||'', 
           newCourse.seats||'', newCourse.discount||'', newCourse.discountCode||'', newCourse.discountType||'percent', newCourse.discountValue||0, 
           newCourse.type||'course', newCourse.category||'', newCourse.displayOrder||99, newCourse.mode||'Offline', !!newCourse.isOnline, 
-          newCourse.imageUrl||'', newCourse.syllabusUrl||'', !!newCourse.isPreview, newCourse.registerFeeFixed||0, newCourse.registerFeePercent||0
+          newCourse.imageUrl||'', newCourse.syllabusUrl||'', !!newCourse.isPreview, newCourse.registerFeeFixed||0, newCourse.registerFeePercent||0,
+          couponsJson
         ]
       );
       res.json({ success: true, message: 'Course created', course: { ...newCourse, slug } });
@@ -242,16 +413,17 @@ apiRouter.put('/courses/:slug', async (req, res) => {
   if (useDB) {
     try {
       const featuresJson = JSON.stringify(updatedData.features || []);
+      const couponsJson = JSON.stringify(updatedData.coupons || []);
       await pool.query(
         `UPDATE programs SET 
-        title=?, name=?, description=?, features=?, durationValue=?, durationType=?, level=?, price=?, feeText=?, seats=?, discountText=?, discountCode=?, discountType=?, discountValue=?, type=?, category=?, displayOrder=?, mode=?, isOnline=?, imageUrl=?, syllabusUrl=?, isPreview=?, registerFeeFixed=?, registerFeePercent=? 
+        title=?, name=?, description=?, features=?, durationValue=?, durationType=?, level=?, price=?, feeText=?, seats=?, discountText=?, discountCode=?, discountType=?, discountValue=?, type=?, category=?, displayOrder=?, mode=?, isOnline=?, imageUrl=?, syllabusUrl=?, isPreview=?, registerFeeFixed=?, registerFeePercent=?, coupons=? 
         WHERE slug=?`,
         [
           updatedData.title||'', updatedData.name||'', updatedData.desc||updatedData.description||'', featuresJson, 
           updatedData.durationValue||0, updatedData.durationType||'Days', updatedData.level||'', updatedData.price||0, updatedData.feeText||'', 
           updatedData.seats||'', updatedData.discount||'', updatedData.discountCode||'', updatedData.discountType||'percent', updatedData.discountValue||0, 
           updatedData.type||'course', updatedData.category||'', updatedData.displayOrder||99, updatedData.mode||'Offline', !!updatedData.isOnline, 
-          updatedData.imageUrl||'', updatedData.syllabusUrl||'', !!updatedData.isPreview, updatedData.registerFeeFixed||0, updatedData.registerFeePercent||0,
+          updatedData.imageUrl||'', updatedData.syllabusUrl||'', !!updatedData.isPreview, updatedData.registerFeeFixed||0, updatedData.registerFeePercent||0, couponsJson,
           slug
         ]
       );
@@ -345,10 +517,10 @@ apiRouter.post('/applications', async (req, res) => {
   if (useDB) {
     try {
       const [rows] = await pool.query('SELECT COUNT(*) as count FROM applications');
-      countStr = (rows[0].count + 1).toString().padStart(3, '0');
+      countStr = (rows[0].count + 1).toString().padStart(4, '0');
       
-      const prefix = newApp.paymentStatus === 'Pay on Day' ? 'AMAI_CASH' : 'AMAI';
-      const refNo = `${prefix}_${year}${month}_${countStr}`;
+      const typeCode = newApp.type === 'internship' ? 'Int' : 'Co';
+      const refNo = `AM-${typeCode}-${year}-${month}-${countStr}`;
       newApp.refNo = refNo;
       
       let dobDate = newApp.dob ? new Date(newApp.dob) : null;
@@ -370,13 +542,13 @@ apiRouter.post('/applications', async (req, res) => {
       
       // Email Notification
       if (newApp.paymentStatus === 'Pay on Day') {
-        sendConfirmationEmail(newApp.email, newApp.name, newApp.course, refNo, 'Pay on Day (Cash)', newApp.amountDue);
+        sendConfirmationEmail(newApp.email, newApp.name, newApp.course, refNo, 'Pay on Day (Cash)', newApp.amountDue, false, '', newApp);
       } else if (newApp.paymentStatus === 'Free') {
-        sendConfirmationEmail(newApp.email, newApp.name, newApp.course, refNo, 'Free Registration', '0');
+        sendConfirmationEmail(newApp.email, newApp.name, newApp.course, refNo, 'Free Registration', '0', false, '', newApp);
       } else if (newApp.type === 'internship') {
-        sendConfirmationEmail(newApp.email, newApp.name, 'Internship Program', refNo, 'Free / Direct', '0');
+        sendConfirmationEmail(newApp.email, newApp.name, 'Internship Program', refNo, 'Free / Direct', '0', false, '', newApp);
       } else {
-        sendConfirmationEmail(newApp.email, newApp.name, newApp.course, refNo);
+        sendConfirmationEmail(newApp.email, newApp.name, newApp.course, refNo, newApp.paymentStatus, newApp.amountDue, false, '', newApp);
       }
 
       res.json({ success: true, message: 'Application submitted!', refNo });
@@ -388,15 +560,15 @@ apiRouter.post('/applications', async (req, res) => {
     // Fallback logic
     try {
       const data = JSON.parse(fs.readFileSync(dataFile, 'utf8'));
-      countStr = (data.length + 1).toString().padStart(3, '0');
-      const prefix = newApp.paymentStatus === 'Pay on Day' ? 'AMAI_CASH' : 'AMAI';
-      const refNo = `${prefix}_${year}${month}_${countStr}`;
+      countStr = (data.length + 1).toString().padStart(4, '0');
+      const typeCode = newApp.type === 'internship' ? 'Int' : 'Co';
+      const refNo = `AM-${typeCode}-${year}-${month}-${countStr}`;
       newApp.refNo = refNo;
       
       data.push(newApp);
       fs.writeFileSync(dataFile, JSON.stringify(data, null, 2));
       
-      sendConfirmationEmail(newApp.email, newApp.name, newApp.course || 'Program', refNo, newApp.paymentStatus, newApp.amountDue);
+      sendConfirmationEmail(newApp.email, newApp.name, newApp.course || 'Program', refNo, newApp.paymentStatus, newApp.amountDue, false, '', newApp);
       res.json({ success: true, message: 'Application submitted!', refNo });
     } catch (err) {
       res.status(500).json({ success: false });
@@ -526,12 +698,50 @@ apiRouter.get('/pricing/:slug', async (req, res) => {
     let finalAmount = course.price || 0;
     let isApplied = false;
 
-    if (finalAmount > 0 && coupon && course.discountCode && coupon.toString().toUpperCase() === course.discountCode.toUpperCase()) {
-      isApplied = true;
-      if (course.discountType === 'percent') {
-        finalAmount = finalAmount - (finalAmount * (course.discountValue / 100));
-      } else if (course.discountType === 'flat') {
-        finalAmount = finalAmount - course.discountValue;
+    if (finalAmount > 0 && coupon) {
+      let appliedCoupon = null;
+      
+      // Check multi-coupons array first
+      let couponsArray = course.coupons;
+      if (typeof couponsArray === 'string') {
+        try { couponsArray = JSON.parse(couponsArray); } catch(e) { couponsArray = []; }
+      }
+      
+      if (Array.isArray(couponsArray)) {
+        const todayStr = new Intl.DateTimeFormat('en-CA', {
+          timeZone: 'Asia/Kolkata',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        }).format(new Date());
+        appliedCoupon = couponsArray.find(c => {
+          if (!c || !c.code || c.code.toUpperCase() !== coupon.toString().toUpperCase() || c.isActive === false) {
+            return false;
+          }
+          if (c.startDate && todayStr < c.startDate) {
+            return false;
+          }
+          if (c.endDate && todayStr > c.endDate) {
+            return false;
+          }
+          return true;
+        });
+      } 
+      
+      // Fallback to legacy single coupon system
+      if (!appliedCoupon && course.discountCode && coupon.toString().toUpperCase() === course.discountCode.toUpperCase()) {
+        appliedCoupon = { type: course.discountType, value: course.discountValue };
+      }
+
+      if (appliedCoupon) {
+        isApplied = true;
+        const discountType = (appliedCoupon.type || '').toLowerCase();
+        const discountValue = Number(appliedCoupon.value) || 0;
+        if (discountType.includes('percent')) {
+          finalAmount = finalAmount - (finalAmount * (discountValue / 100));
+        } else {
+          finalAmount = finalAmount - discountValue;
+        }
       }
     }
 
