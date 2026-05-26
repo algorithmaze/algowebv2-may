@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import Navbar from './Navbar';
 import Footer from './Footer';
 import { API_BASE_URL } from '../config';
+import { getGoogleIcon } from './ContentSections';
 
 export default function InternshipDetail() {
   const { slug } = useParams<{ slug: string }>();
@@ -62,8 +63,8 @@ export default function InternshipDetail() {
               </Link>
               
               <div className="flex items-center gap-6 mb-8">
-                <div className="text-6xl md:text-8xl p-6 bg-white/5 rounded-3xl border border-white/10 shadow-[0_20px_40px_rgba(0,0,0,0.3)]">
-                  {track.icon || '💼'}
+                <div className="p-6 bg-white/5 rounded-3xl border border-white/10 shadow-[0_20px_40px_rgba(0,0,0,0.3)] flex items-center justify-center">
+                  <span className="material-symbols-outlined text-6xl md:text-7xl text-teal-green">{getGoogleIcon(track.icon || '💼')}</span>
                 </div>
                 <div>
                   <div className="px-4 py-1.5 bg-teal-green/20 border border-teal-green/30 rounded-full text-xs font-black uppercase tracking-widest text-teal-green inline-block mb-4">
@@ -90,13 +91,13 @@ export default function InternshipDetail() {
                   </h3>
                   <div className="space-y-4">
                     {[
-                      { title: "Real-World Experience", desc: "Work on actual client projects and internal tools used by the community.", icon: "🚀" },
-                      { title: "Expert Mentorship", desc: "Get 1-on-1 guidance from experienced engineers and designers.", icon: "👨‍🏫" },
-                      { title: "Academic Compliance", desc: "Adheres to UGC & AICTE mandates to bridge the gap between theory and industry practice.", icon: "🏛️" },
-                      { title: "Placement Support", desc: "Access to our network of partner companies for potential job opportunities.", icon: "💯" }
+                      { title: "Real-World Experience", desc: "Work on actual client projects and internal tools used by the community.", icon: "rocket_launch" },
+                      { title: "Expert Mentorship", desc: "Get 1-on-1 guidance from experienced engineers and designers.", icon: "school" },
+                      { title: "Academic Compliance", desc: "Adheres to UGC & AICTE mandates to bridge the gap between theory and industry practice.", icon: "account_balance" },
+                      { title: "Placement Support", desc: "Access to our network of partner companies for potential job opportunities.", icon: "verified" }
                     ].map((item, i) => (
                       <div key={i} className="glass-ui !p-6 border border-white/5 hover:border-teal-green/30 transition-all group flex gap-5">
-                        <div className="text-3xl flex-shrink-0">{item.icon}</div>
+                        <span className="material-symbols-outlined text-3xl text-teal-green flex-shrink-0">{item.icon}</span>
                         <div>
                           <h4 className="text-lg font-bold text-white mb-2 group-hover:text-teal-green transition-colors">{item.title}</h4>
                           <p className="text-cyan-50/60 text-sm leading-relaxed">{item.desc}</p>
@@ -114,7 +115,7 @@ export default function InternshipDetail() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="glass-ui !p-6 border border-teal-green/10">
                        <h4 className="font-bold text-white mb-2 flex items-center gap-2">
-                         <span className="text-teal-green">⏳</span> Available Durations
+                         <span className="material-symbols-outlined text-teal-green">hourglass_empty</span> Available Durations
                        </h4>
                        <p className="text-cyan-50/60 text-xs leading-relaxed">
                          Choose based on your college requirement: <br/>
@@ -123,7 +124,7 @@ export default function InternshipDetail() {
                     </div>
                     <div className="glass-ui !p-6 border border-electric-blue/10">
                        <h4 className="font-bold text-white mb-2 flex items-center gap-2">
-                         <span className="text-electric-blue">📂</span> Project Levels
+                         <span className="material-symbols-outlined text-electric-blue">folder_open</span> Project Levels
                        </h4>
                        <p className="text-cyan-50/60 text-xs leading-relaxed">
                          Dedicated support for: <br/>

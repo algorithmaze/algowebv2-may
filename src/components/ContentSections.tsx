@@ -1,6 +1,24 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { API_BASE_URL } from '../config';
+import { useLenis } from 'lenis/react';
+
+export function getGoogleIcon(emojiOrSymbol: string) {
+  const mapping: { [key: string]: string } = {
+    "🧠": "psychology",
+    "⚡": "bolt",
+    "📟": "developer_board",
+    "🛠️": "handyman",
+    "💻": "terminal",
+    "🌐": "public",
+    "🚀": "rocket_launch",
+    "🤖": "smart_toy",
+    "👨‍🏫": "school",
+    "⏳": "hourglass_empty",
+    "🎓": "school"
+  };
+  return mapping[emojiOrSymbol] || emojiOrSymbol || "arrow_forward";
+}
 
 export function SectionHeading({ title, subtitle }: { title: any, subtitle: string }) {
   return (
@@ -8,6 +26,183 @@ export function SectionHeading({ title, subtitle }: { title: any, subtitle: stri
       <h2 className="text-3xl md:text-6xl font-black mb-6 uppercase tracking-tight text-white">{title}</h2>
       <p className="text-cyan-50/50 text-lg font-light max-w-2xl mx-auto">{subtitle}</p>
     </div>
+  );
+}
+
+export function WingsSection() {
+  const navigate = useNavigate();
+  const lenis = useLenis();
+
+  return (
+    <section id="wings" className="py-24 md:py-32 bg-dark-black relative z-20 overflow-hidden">
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-electric-blue/5 blur-[160px] rounded-full pointer-events-none" />
+      <div className="container mx-auto px-6 lg:px-16 relative z-10">
+        <SectionHeading 
+          title={<>The Core <span className="text-electric-blue">Wings</span></>} 
+          subtitle="We engineer cutting-edge digital products and train the next generation of tech innovators." 
+        />
+        
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
+          {/* Card A: Algorithmaze AI - Solutions Wing */}
+          <div className="glass-ui relative overflow-hidden group hover:border-electric-blue/40 border border-white/10 transition-all duration-500 rounded-[2.5rem] !p-8 md:!p-12 flex flex-col justify-between min-h-[500px]">
+            <div className="absolute -top-12 -right-12 w-48 h-48 bg-electric-blue/10 blur-[80px] rounded-full pointer-events-none group-hover:bg-electric-blue/20 transition-all duration-700" />
+            
+            <div>
+              <div className="flex items-center justify-between mb-8">
+                <span className="px-5 py-2 bg-electric-blue/10 border border-electric-blue/20 rounded-full text-xs font-black uppercase tracking-widest text-electric-blue flex items-center gap-1.5">
+                  <span className="material-symbols-outlined text-sm">bolt</span> Enterprise & Dev
+                </span>
+                <span className="material-symbols-outlined text-4xl text-electric-blue">psychology</span>
+              </div>
+              
+              <h3 className="text-3xl md:text-4xl font-black text-white mb-2 leading-tight group-hover:text-electric-blue transition-colors">
+                Algorithmaze AI
+              </h3>
+              <p className="text-xs uppercase font-black tracking-widest text-electric-blue/80 mb-6">
+                AI & Smart Tech Solutions
+              </p>
+              <p className="text-cyan-50/70 text-base md:text-lg font-light mb-8 leading-relaxed">
+                A specialized technology company building innovative digital solutions, IoT devices, robotics ecosystems, and smart automation systems for businesses, startups, and institutions.
+              </p>
+              
+              <ul className="space-y-4 mb-8">
+                {[
+                  "Artificial Intelligence Solutions",
+                  "IoT & Robotics Systems",
+                  "Full Stack Custom Development",
+                  "Smart Automation Systems",
+                  "Modern Digital Solutions"
+                ].map((item, idx) => (
+                  <li key={idx} className="flex items-center gap-4 text-white/80">
+                    <div className="w-5 h-5 rounded-md bg-electric-blue/10 flex-shrink-0 flex items-center justify-center text-electric-blue">
+                      <span className="material-symbols-outlined text-[12px] font-black">done</span>
+                    </div>
+                    <span className="text-sm md:text-base font-semibold">{item}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <p className="text-xs text-electric-blue/70 mb-10 italic border-l border-electric-blue/30 pl-4 py-1 leading-relaxed">
+                Empowering industrial growth. We develop custom AI models, intelligent workflows, and hardware automation built to scale modern operations.
+              </p>
+            </div>
+            
+            <a 
+              href="#projects" 
+              onClick={(e) => {
+                e.preventDefault();
+                if (lenis) {
+                  lenis.scrollTo('#projects');
+                } else {
+                  const elem = document.getElementById('projects');
+                  elem?.scrollIntoView({ behavior: 'smooth' });
+                }
+              }}
+              className="w-full text-center py-4 bg-white/5 border border-white/10 hover:border-electric-blue hover:bg-electric-blue hover:text-dark-black text-white font-black uppercase tracking-widest text-xs rounded-2xl transition-all duration-300"
+            >
+              Explore Solutions
+            </a>
+          </div>
+
+          {/* Card B: Algorithmaze Academy - Learning Wing */}
+          <div className="glass-ui relative overflow-hidden group hover:border-teal-green/40 border border-white/10 transition-all duration-500 rounded-[2.5rem] !p-8 md:!p-12 flex flex-col justify-between min-h-[500px]">
+            <div className="absolute -top-12 -right-12 w-48 h-48 bg-teal-green/10 blur-[80px] rounded-full pointer-events-none group-hover:bg-teal-green/20 transition-all duration-700" />
+            
+            <div>
+              <div className="flex items-center justify-between mb-8">
+                <span className="px-5 py-2 bg-teal-green/10 border border-teal-green/20 rounded-full text-xs font-black uppercase tracking-widest text-teal-green flex items-center gap-1.5">
+                  <span className="material-symbols-outlined text-sm">school</span> Education & Labs
+                </span>
+                <span className="material-symbols-outlined text-4xl text-teal-green">rocket_launch</span>
+              </div>
+              
+              <h3 className="text-3xl md:text-4xl font-black text-white mb-2 leading-tight group-hover:text-teal-green transition-colors">
+                Algorithmaze Academy
+              </h3>
+              <p className="text-xs uppercase font-black tracking-widest text-teal-green/80 mb-6">
+                Smart Tech Learning & Innovation Hub
+              </p>
+              <p className="text-cyan-50/70 text-base md:text-lg font-light mb-8 leading-relaxed">
+                A practical technology learning hub empowering students with future-ready skills in programming, AI, IoT, robotics, and advanced engineering through hands-on labs.
+              </p>
+              
+              <ul className="space-y-4 mb-8">
+                {[
+                  "AI & Programming Training",
+                  "IoT & Robotics Learning",
+                  "Academic Internship Programs",
+                  "Project-Based Mentorship",
+                  "Career & Placement Support",
+                  "Innovation Workshops & Bootcamps"
+                ].map((item, idx) => (
+                  <li key={idx} className="flex items-center gap-4 text-white/80">
+                    <div className="w-5 h-5 rounded-md bg-teal-green/10 flex-shrink-0 flex items-center justify-center text-teal-green">
+                      <span className="material-symbols-outlined text-[12px] font-black">done</span>
+                    </div>
+                    <span className="text-sm md:text-base font-semibold">{item}</span>
+                  </li>
+                ))}
+              </ul>
+              
+              <p className="text-xs text-teal-green/70 mb-10 italic border-l border-teal-green/30 pl-4 py-1 leading-relaxed">
+                Build the systems we engineer. Our academy programs teach you the exact science behind our live enterprise solutions.
+              </p>
+            </div>
+            
+            <button 
+              onClick={() => navigate("/courses")}
+              className="w-full text-center py-4 bg-white/5 border border-white/10 hover:border-teal-green hover:bg-teal-green hover:text-dark-black text-white font-black uppercase tracking-widest text-xs rounded-2xl transition-all duration-300 cursor-pointer"
+            >
+              Explore Programs
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+export function VisionMissionSection() {
+  return (
+    <section id="vision-mission" className="py-24 md:py-32 bg-dark-black relative z-20 border-t border-white/5 overflow-hidden">
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[500px] bg-teal-green/5 blur-[150px] rounded-full pointer-events-none" />
+      <div className="container mx-auto px-6 lg:px-16 relative z-10">
+        <SectionHeading 
+          title={<>Vision & <span className="text-teal-green">Mission</span></>} 
+          subtitle="Our core purpose and aspirations driving Algorithmaze AI and Algorithmaze Academy forward." 
+        />
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 max-w-5xl mx-auto">
+          {/* Vision Card */}
+          <div className="glass-ui relative overflow-hidden group hover:border-electric-blue/40 border border-white/10 transition-all duration-500 rounded-[2rem] !p-10 flex flex-col items-start">
+            <div className="absolute -top-12 -right-12 w-32 h-32 bg-electric-blue/10 blur-3xl rounded-full pointer-events-none group-hover:bg-electric-blue/20 transition-all duration-700" />
+            <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-8 group-hover:border-electric-blue/40 group-hover:scale-110 transition-all">
+              <span className="material-symbols-outlined text-3xl text-electric-blue">visibility</span>
+            </div>
+            <h3 className="text-2xl md:text-3xl font-black text-white mb-6 uppercase tracking-wider group-hover:text-electric-blue transition-colors">
+              Our Vision
+            </h3>
+            <p className="text-cyan-50/70 text-lg font-light leading-relaxed">
+              To inspire innovation and empower people through technology, creativity, and future-ready solutions.
+            </p>
+          </div>
+
+          {/* Mission Card */}
+          <div className="glass-ui relative overflow-hidden group hover:border-teal-green/40 border border-white/10 transition-all duration-500 rounded-[2rem] !p-10 flex flex-col items-start">
+            <div className="absolute -top-12 -right-12 w-32 h-32 bg-teal-green/10 blur-3xl rounded-full pointer-events-none group-hover:bg-teal-green/20 transition-all duration-700" />
+            <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-8 group-hover:border-teal-green/40 group-hover:scale-110 transition-all">
+              <span className="material-symbols-outlined text-3xl text-teal-green">track_changes</span>
+            </div>
+            <h3 className="text-2xl md:text-3xl font-black text-white mb-6 uppercase tracking-wider group-hover:text-teal-green transition-colors">
+              Our Mission
+            </h3>
+            <p className="text-cyan-50/70 text-lg font-light leading-relaxed">
+              To provide intelligent solutions, practical learning, and innovative technologies that help individuals, students, and businesses grow in the digital future.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -35,9 +230,9 @@ export function CoursesSection() {
   const filteredCourses = courses.filter(c => (c.type || '').toLowerCase() === activeTab);
 
   const tabs = [
-    { id: 'bootcamp', label: 'Bootcamps', icon: '🔥' },
-    { id: 'course', label: 'Professional Courses', icon: '🎓' },
-    { id: 'workshop', label: 'Workshops', icon: '🛠️' }
+    { id: 'bootcamp', label: 'Bootcamps', icon: 'local_fire_department' },
+    { id: 'course', label: 'Professional Courses', icon: 'school' },
+    { id: 'workshop', label: 'Workshops', icon: 'handyman' }
   ];
 
   return (
@@ -53,7 +248,7 @@ export function CoursesSection() {
                 ? 'bg-electric-blue text-dark-black border-electric-blue shadow-[0_10px_30px_rgba(0,229,255,0.3)]' 
                 : 'bg-white/5 text-white/50 border-white/10 hover:border-white/20 hover:bg-white/10'}`}
             >
-              <span className="text-xl">{tab.icon}</span>
+              <span className="material-symbols-outlined text-xl">{tab.icon}</span>
               {tab.label}
             </button>
           ))}
@@ -75,8 +270,8 @@ export function CoursesSection() {
                     {/* Discount Badge */}
                     {course.discountCode && (
                       <div className="mb-6 inline-flex self-start">
-                        <div className="bg-gradient-to-r from-orange-400 to-yellow-500 text-dark-black text-[10px] md:text-xs font-black uppercase tracking-wider px-5 py-2 rounded-xl shadow-[0_10px_20px_rgba(251,146,60,0.3)] transform -rotate-1 hover:rotate-0 transition-transform">
-                          🎓 {course.discount || `${course.discountValue}${course.discountType === 'percent' ? '%' : '₹'} OFF (CODE: ${course.discountCode})`}
+                        <div className="bg-gradient-to-r from-orange-400 to-yellow-500 text-dark-black text-[10px] md:text-xs font-black uppercase tracking-wider px-5 py-2 rounded-xl shadow-[0_10px_20px_rgba(251,146,60,0.3)] transform -rotate-1 hover:rotate-0 transition-transform flex items-center gap-1.5">
+                          <span className="material-symbols-outlined text-xs">school</span> {course.discount || `${course.discountValue}${course.discountType === 'percent' ? '%' : '₹'} OFF (CODE: ${course.discountCode})`}
                         </div>
                       </div>
                     )}
@@ -136,8 +331,8 @@ export function CoursesSection() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-20">
-               <div className="text-6xl mb-6">⏳</div>
+            <div className="text-center py-20 flex flex-col items-center justify-center">
+               <span className="material-symbols-outlined text-6xl mb-6 text-white/40 block">hourglass_empty</span>
                <h3 className="text-2xl font-black text-white/40 uppercase tracking-widest">Coming Soon</h3>
                <p className="text-white/20 text-sm mt-2">New programs are currently in development.</p>
             </div>
@@ -220,7 +415,7 @@ export function InternshipSection() {
           className="glass-ui !p-8 group cursor-pointer hover:border-teal-green/40 transition-all relative overflow-hidden"
         >
           <div className="absolute top-0 right-0 w-24 h-24 bg-teal-green/5 blur-3xl rounded-full -mr-12 -mt-12 group-hover:bg-teal-green/10 transition-all" />
-          <div className="text-5xl mb-8 transform group-hover:scale-110 transition-transform origin-left">{track.icon || '🚀'}</div>
+          <span className="material-symbols-outlined text-5xl mb-8 transform group-hover:scale-110 transition-transform origin-left block text-teal-green">{getGoogleIcon(track.icon || '🚀')}</span>
           <h3 className="text-2xl font-black text-white mb-4 group-hover:text-teal-green transition-colors">{track.title}</h3>
           <p className="text-cyan-50/50 text-sm leading-relaxed mb-10">{track.desc}</p>
           
@@ -239,21 +434,29 @@ export function InternshipSection() {
 
 export function TeamSection() {
   const team = [
-    { name: "Antony AI", role: "AI Research & Development", icon: "🤖" },
-    { name: "Tech Master", role: "Full Stack Automation", icon: "⚡" },
-    { name: "Design Lead", role: "Creative Director", icon: "🎨" }
+    { name: "Antony Robinson Sundarraj", role: "Founder & CEO", icon: "account_circle" },
+    { name: "Prajesh R", role: "Mentor", icon: "school" },
+    { name: "Mekloria & Prajesh R", role: "Investor", icon: "payments" },
+    { name: "Joevit Sundarraj", role: "Digital Marketing & Social Media", icon: "campaign" }
   ];
 
   return (
     <section id="team" className="py-24 md:py-32 bg-dark-black relative z-20 overflow-hidden">
       <div className="container mx-auto px-6 lg:px-16">
         <SectionHeading title={<>The <span className="text-electric-blue">Masterminds</span></>} subtitle="Meet the visionaries building the future of technology." />
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
           {team.map((member, i) => (
-            <div key={i} className="glass-ui !p-10 text-center group border border-white/5 hover:border-electric-blue/30 transition-all">
-              <div className="text-6xl mb-8 group-hover:scale-110 transition-transform">{member.icon}</div>
-              <h3 className="text-2xl font-black text-white mb-2">{member.name}</h3>
-              <p className="text-cyan-50/50 uppercase tracking-widest text-xs font-bold">{member.role}</p>
+            <div key={i} className="glass-ui !p-10 text-center group border border-white/5 hover:border-electric-blue/30 transition-all flex flex-col items-center justify-between rounded-3xl min-h-[320px] relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-electric-blue/5 blur-2xl rounded-full -mr-12 -mt-12 group-hover:bg-electric-blue/10 transition-all pointer-events-none" />
+              
+              <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-8 group-hover:border-electric-blue/40 group-hover:scale-110 transition-all flex-shrink-0">
+                <span className="material-symbols-outlined text-electric-blue group-hover:text-white transition-colors" style={{ fontSize: '2.5rem' }}>{member.icon}</span>
+              </div>
+              
+              <div className="flex-grow flex flex-col justify-end">
+                <h3 className="text-lg font-black text-white mb-3 tracking-tight leading-snug">{member.name}</h3>
+                <p className="text-cyan-50/50 uppercase tracking-widest text-[10px] font-black">{member.role}</p>
+              </div>
             </div>
           ))}
         </div>
@@ -262,25 +465,29 @@ export function TeamSection() {
   );
 }
 
-export function FeaturesSection() {
-  const features = [
-    { title: "AI-Powered Learning", desc: "Experience futuristic education integrated with advanced AI tools.", icon: "🤖" },
-    { title: "Hands-on Projects", desc: "Build real-world industrial applications that matter.", icon: "🛠️" },
-    { title: "Expert Mentorship", desc: "Learn directly from industry leaders and tech innovators.", icon: "👨‍🏫" },
-    { title: "Career Acceleration", desc: "Get priority access to our hiring network and placement support.", icon: "🚀" }
+export function ServicesSection() {
+  const services = [
+    { title: "Artificial Intelligence Solutions", desc: "Custom LLMs, cognitive voice agents, neural search platforms, and smart predictive models built for operations.", icon: "psychology" },
+    { title: "IoT & Robotics Systems", desc: "End-to-end hardware solutions, autonomous robotic navigation, and distributed sensor networks.", icon: "bolt" },
+    { title: "Full Stack Development", desc: "High-performance MERN & Next.js systems built for enterprise scaling and beautiful client interfaces.", icon: "terminal" },
+    { title: "Smart Automation Systems", desc: "Robotic process automation (RPA), intelligent API connections, and smart CRM bots that reduce overhead.", icon: "smart_toy" },
+    { title: "Modern Digital Solutions", desc: "Cloud architecture, high-security server configurations, and future-ready frameworks for schools and startups.", icon: "public" }
   ];
 
   return (
-    <section id="features" className="py-24 md:py-32 bg-white/5 border-y border-white/5 relative z-20 overflow-hidden">
+    <section id="services" className="py-24 md:py-32 bg-white/5 border-y border-white/5 relative z-20 overflow-hidden">
        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-electric-blue/5 blur-[150px] rounded-full pointer-events-none" />
        <div className="container mx-auto px-6 lg:px-16 relative z-10">
-         <SectionHeading title={<>Why Choose <span className="text-teal-green">AlgorithmazeAI?</span></>} subtitle="We don't just teach technology; we help you master the future." />
-         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-           {features.map((feat, i) => (
-             <div key={i} className="space-y-6 group">
-               <div className="text-4xl group-hover:scale-110 transition-transform origin-left">{feat.icon}</div>
-               <h3 className="text-xl font-bold text-white group-hover:text-teal-green transition-colors">{feat.title}</h3>
-               <p className="text-cyan-50/50 text-sm leading-relaxed">{feat.desc}</p>
+         <SectionHeading title={<>AI & Smart Tech <span className="text-electric-blue">Services</span></>} subtitle="Building the innovative software and hardware systems that drive business growth." />
+         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+           {services.map((svc, i) => (
+             <div key={i} className="glass-ui !p-8 group hover:border-electric-blue/30 transition-all border border-white/5 relative overflow-hidden rounded-3xl flex flex-col justify-between">
+               <div className="absolute top-0 right-0 w-24 h-24 bg-electric-blue/5 blur-2xl rounded-full -mr-12 -mt-12 group-hover:bg-electric-blue/10 transition-all" />
+               <div>
+                 <span className="material-symbols-outlined text-4xl mb-6 text-electric-blue group-hover:scale-110 transition-transform origin-left block">{svc.icon}</span>
+                 <h3 className="text-xl font-bold text-white mb-4 group-hover:text-electric-blue transition-colors">{svc.title}</h3>
+                 <p className="text-cyan-50/50 text-sm leading-relaxed">{svc.desc}</p>
+               </div>
              </div>
            ))}
          </div>
@@ -300,7 +507,7 @@ export function FAQSection() {
   return (
     <section id="faq" className="py-24 md:py-32 bg-dark-black relative z-20">
       <div className="container mx-auto px-6 lg:px-16">
-        <SectionHeading title="FAQ<span>s</span>" subtitle="Common questions about our programs and approach." />
+        <SectionHeading title={<>FAQ<span className="text-electric-blue">s</span></>} subtitle="Common questions about our programs and approach." />
         <div className="max-w-3xl mx-auto space-y-4">
           {faqs.map((faq, i) => (
             <div key={i} className="glass-ui !p-8 border border-white/5 hover:border-white/10 transition-all">
@@ -325,11 +532,15 @@ export function ContactSection() {
               
               <div className="space-y-6">
                  <div className="flex items-center gap-6">
-                    <div className="w-12 h-12 rounded-full bg-electric-blue/10 flex items-center justify-center text-electric-blue">📧</div>
+                    <div className="w-12 h-12 rounded-full bg-electric-blue/10 flex items-center justify-center">
+                       <span className="material-symbols-outlined text-xl text-electric-blue">mail</span>
+                    </div>
                     <span className="text-white font-bold">contact@algorithmaze.ai</span>
                  </div>
                  <div className="flex items-center gap-6">
-                    <div className="w-12 h-12 rounded-full bg-teal-green/10 flex items-center justify-center text-teal-green">📍</div>
+                    <div className="w-12 h-12 rounded-full bg-teal-green/10 flex items-center justify-center">
+                       <span className="material-symbols-outlined text-xl text-teal-green">location_on</span>
+                    </div>
                     <span className="text-white font-bold">Trichy, Tamil Nadu</span>
                  </div>
               </div>

@@ -28,14 +28,14 @@ export default function CoursesPage() {
           {/* Quick Stats/Hooks */}
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4 max-w-5xl mx-auto mt-12">
             {[
-              { icon: "⚡", label: "Skills-Focused" },
-              { icon: "🛠️", label: "Hands-on Lab" },
-              { icon: "👨‍🏫", label: "Expert Mentors" },
-              { icon: "🚀", label: "Project Based" },
-              { icon: "📈", label: "Career Growth" }
+              { icon: "bolt", label: "Skills-Focused" },
+              { icon: "handyman", label: "Hands-on Lab" },
+              { icon: "school", label: "Expert Mentors" },
+              { icon: "rocket_launch", label: "Project Based" },
+              { icon: "trending_up", label: "Career Growth" }
             ].map((stat, i) => (
               <div key={i} className="glass-ui !p-4 border border-white/5 flex flex-col items-center gap-2 hover:border-electric-blue/30 transition-all">
-                <span className="text-2xl">{stat.icon}</span>
+                <span className="material-symbols-outlined text-2xl text-electric-blue">{stat.icon}</span>
                 <span className="text-[10px] font-black uppercase tracking-widest text-white/60">{stat.label}</span>
               </div>
             ))}
@@ -63,13 +63,13 @@ export default function CoursesPage() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                   {[
-                    { title: "Industry Mentors", desc: "Learn directly from engineers working at top global tech firms.", icon: "👨‍💻" },
-                    { title: "Live Projects", desc: "Build real-world applications that you can showcase in your portfolio.", icon: "🚀" },
-                    { title: "AI-Integrated", desc: "Curriculum updated with latest AI tools to boost your productivity.", icon: "🤖" },
-                    { title: "Career Support", desc: "Resume building, mock interviews, and referral support for top students.", icon: "🤝" }
+                    { title: "Industry Mentors", desc: "Learn directly from engineers working at top global tech firms.", icon: "engineering" },
+                    { title: "Live Projects", desc: "Build real-world applications that you can showcase in your portfolio.", icon: "rocket_launch" },
+                    { title: "AI-Integrated", desc: "Curriculum updated with latest AI tools to boost your productivity.", icon: "smart_toy" },
+                    { title: "Career Support", desc: "Resume building, mock interviews, and referral support for top students.", icon: "handshake" }
                   ].map((feat, i) => (
                     <div key={i} className="group">
-                      <div className="text-3xl mb-4 group-hover:scale-110 transition-transform origin-left">{feat.icon}</div>
+                      <span className="material-symbols-outlined text-3xl text-electric-blue mb-4 group-hover:scale-110 transition-transform origin-left block">{feat.icon}</span>
                       <h3 className="text-lg font-bold text-white mb-2 group-hover:text-electric-blue transition-colors">{feat.title}</h3>
                       <p className="text-cyan-50/50 text-sm leading-relaxed">{feat.desc}</p>
                     </div>

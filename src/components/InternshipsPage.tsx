@@ -28,14 +28,14 @@ export default function InternshipsPage() {
           {/* Quick Stats/Hooks */}
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4 max-w-5xl mx-auto mt-12">
             {[
-              { icon: "🎯", label: "Students / Freshers" },
-              { icon: "💼", label: "Practical Training" },
-              { icon: "📜", label: "Recognized Certificate" },
-              { icon: "🚀", label: "Career Focused" },
-              { icon: "💯", label: "Placement Support" }
+              { icon: "track_changes", label: "Students / Freshers" },
+              { icon: "work", label: "Practical Training" },
+              { icon: "workspace_premium", label: "Recognized Certificate" },
+              { icon: "rocket_launch", label: "Career Focused" },
+              { icon: "verified", label: "Placement Support" }
             ].map((stat, i) => (
               <div key={i} className="glass-ui !p-4 border border-white/5 flex flex-col items-center gap-2 hover:border-teal-green/30 transition-all">
-                <span className="text-2xl">{stat.icon}</span>
+                <span className="material-symbols-outlined text-2xl text-teal-green">{stat.icon}</span>
                 <span className="text-[10px] font-black uppercase tracking-widest text-white/60">{stat.label}</span>
               </div>
             ))}
@@ -63,13 +63,13 @@ export default function InternshipsPage() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                   {[
-                    { title: "Academic Compliance", desc: "Adheres to UGC & AICTE mandates to bridge the gap between theory and industry practice.", icon: "🏛️" },
-                    { title: "Flexible Durations", desc: "15 Days to 6 Months programs tailored to your university requirements.", icon: "⏳" },
-                    { title: "Project Mentorship", desc: "Expert guidance for both Mini (Pre-final) and Major (Final Year) projects.", icon: "📂" },
-                    { title: "Career Placement", desc: "100% placement support with access to our elite hiring partner network.", icon: "💯" }
+                    { title: "Academic Compliance", desc: "Adheres to UGC & AICTE mandates to bridge the gap between theory and industry practice.", icon: "account_balance" },
+                    { title: "Flexible Durations", desc: "15 Days to 6 Months programs tailored to your university requirements.", icon: "hourglass_empty" },
+                    { title: "Project Mentorship", desc: "Expert guidance for both Mini (Pre-final) and Major (Final Year) projects.", icon: "folder_open" },
+                    { title: "Career Placement", desc: "100% placement support with access to our elite hiring partner network.", icon: "verified" }
                   ].map((feat, i) => (
                     <div key={i} className="group">
-                      <div className="text-3xl mb-4 group-hover:scale-110 transition-transform origin-left">{feat.icon}</div>
+                      <span className="material-symbols-outlined text-3xl text-teal-green mb-4 group-hover:scale-110 transition-transform origin-left block">{feat.icon}</span>
                       <h3 className="text-lg font-bold text-white mb-2 group-hover:text-teal-green transition-colors">{feat.title}</h3>
                       <p className="text-cyan-50/50 text-sm leading-relaxed">{feat.desc}</p>
                     </div>

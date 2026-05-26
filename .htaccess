@@ -1,3 +1,7 @@
+# Disable custom error overrides so Node.js JSON errors pass through directly to the client
+ErrorDocument 500 default
+ErrorDocument 404 default
+
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /

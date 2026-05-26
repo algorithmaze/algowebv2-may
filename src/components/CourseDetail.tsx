@@ -66,11 +66,11 @@ export default function CourseDetail() {
               
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
                 <div>
-                   {course.discountCode && (
-                    <div className="mb-6 inline-block bg-gradient-to-r from-orange-400 to-yellow-500 text-dark-black text-xs font-black uppercase tracking-widest px-6 py-2 rounded-xl shadow-[0_10px_20px_rgba(251,146,60,0.3)]">
-                      🎓 {course.discount || `${course.discountValue}${course.discountType === 'percent' ? '%' : '₹'} OFF`}
-                    </div>
-                  )}
+                    {course.discountCode && (
+                     <div className="mb-6 inline-flex bg-gradient-to-r from-orange-400 to-yellow-500 text-dark-black text-xs font-black uppercase tracking-widest px-6 py-2 rounded-xl shadow-[0_10px_20px_rgba(251,146,60,0.3)] items-center gap-1.5">
+                       <span className="material-symbols-outlined text-sm">school</span> {course.discount || `${course.discountValue}${course.discountType === 'percent' ? '%' : '₹'} OFF`}
+                     </div>
+                   )}
                   
                   <h1 className="text-4xl md:text-7xl font-black mb-8 leading-[1.1] tracking-tight">
                     {course.title}
@@ -96,7 +96,7 @@ export default function CourseDetail() {
                       <img src="/images/course_bg.png" alt={course.title} className="w-full aspect-video object-cover rounded-[2.4rem] opacity-40" />
                       <div className="absolute inset-0 bg-gradient-to-t from-dark-black via-transparent to-transparent" />
                       <div className="absolute bottom-8 left-8 right-8">
-                         <div className="text-4xl mb-4">🚀</div>
+                         <span className="material-symbols-outlined text-4xl mb-4 text-electric-blue block">rocket_launch</span>
                          <h4 className="text-white font-black text-xl mb-1">Practical Excellence</h4>
                          <p className="text-white/40 text-xs uppercase tracking-widest">Industry Standard Curriculum</p>
                       </div>
@@ -132,7 +132,7 @@ export default function CourseDetail() {
                 <div className="p-10 bg-gradient-to-br from-white/5 to-transparent border border-white/10 rounded-[2rem] relative overflow-hidden group">
                    <div className="absolute top-0 right-0 w-32 h-32 bg-electric-blue/5 blur-3xl rounded-full" />
                    <h3 className="text-2xl font-black mb-6 flex items-center gap-4">
-                      <span className="text-3xl">🏛️</span>
+                      <span className="material-symbols-outlined text-3xl text-electric-blue">account_balance</span>
                       Industry Integrated Curriculum
                    </h3>
                    <p className="text-cyan-50/60 leading-relaxed text-lg mb-8">

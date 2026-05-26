@@ -15,11 +15,16 @@ const PORT = process.env.PORT || 3001;
 
 // Global flag to track if we should use DB or fallback to JSON
 let useDB = false;
+let dbError = null;
 
 // Initialize Database Connection
 (async () => {
-  useDB = await testConnection();
-  if (!useDB) {
+  const connResult = await testConnection();
+  if (connResult === true) {
+    useDB = true;
+  } else {
+    useDB = false;
+    dbError = connResult;
     console.log('⚠️ Running in fallback mode using JSON files.');
   }
 })();
@@ -55,7 +60,11 @@ const apiRouter = express.Router();
 
 apiRouter.get('/', (req, res) => {
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
-  res.status(200).send(`<h1>API is running</h1><p>DB Connected: ${useDB}</p>`);
+  if (useDB) {
+    res.status(200).send(`<h1>API is running</h1><p>DB Connected: true</p>`);
+  } else {
+    res.status(200).send(`<h1>API is running</h1><p>DB Connected: false</p><p style="color: #c2410c; font-family: monospace; background: #fff7ed; padding: 15px; border: 1px solid #fed7aa; border-radius: 10px; max-width: 600px; line-height: 1.5;"><strong>Database Connection Error:</strong><br/>${dbError || 'Unknown connection error'}</p>`);
+  }
 });
 
 const razorpay = new Razorpay({
@@ -553,8 +562,8 @@ apiRouter.post('/applications', async (req, res) => {
 
       res.json({ success: true, message: 'Application submitted!', refNo });
     } catch (err) {
-      console.error(err);
-      res.status(500).json({ success: false, message: 'DB Error' });
+      console.error('Database application submission error:', err);
+      res.status(400).json({ success: false, message: 'Database Error: ' + err.message });
     }
   } else {
     // Fallback logic
@@ -571,7 +580,8 @@ apiRouter.post('/applications', async (req, res) => {
       sendConfirmationEmail(newApp.email, newApp.name, newApp.course || 'Program', refNo, newApp.paymentStatus, newApp.amountDue, false, '', newApp);
       res.json({ success: true, message: 'Application submitted!', refNo });
     } catch (err) {
-      res.status(500).json({ success: false });
+      console.error('Fallback application submission error:', err);
+      res.status(400).json({ success: false, message: 'Fallback Error: ' + err.message });
     }
   }
 });
@@ -764,7 +774,7 @@ apiRouter.post('/create-order', async (req, res) => {
     res.json(order);
   } catch (error) {
     console.error('Razorpay Order Error:', error);
-    res.status(500).json({ success: false, message: 'Failed to create order', error });
+    res.status(400).json({ success: false, message: 'Failed to create order: ' + (error.description || error.message || 'Unknown Razorpay error'), error });
   }
 });
 

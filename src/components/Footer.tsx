@@ -22,25 +22,35 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Quick Links */}
+          {/* Algorithmaze AI - Solutions */}
           <div>
-            <h4 className="text-white font-bold mb-6 uppercase tracking-widest text-xs">Navigation</h4>
+            <h4 className="text-white font-bold mb-6 uppercase tracking-widest text-xs">Algorithmaze AI</h4>
             <ul className="space-y-4">
-              {['Home', 'Masterminds', 'Projects', 'Courses', 'Internships'].map(item => (
-                <li key={item}>
-                  <a href={`#${item.toLowerCase()}`} className="text-cyan-50/50 hover:text-electric-blue transition-colors text-sm">{item}</a>
+              {[
+                { name: 'AI Solutions', href: '/#services' },
+                { name: 'IoT & Robotics', href: '/#services' },
+                { name: 'Smart Automation', href: '/#services' },
+                { name: 'Custom Development', href: '/#services' }
+              ].map(item => (
+                <li key={item.name}>
+                  <a href={item.href} className="text-cyan-50/50 hover:text-electric-blue transition-colors text-sm">{item.name}</a>
                 </li>
               ))}
             </ul>
           </div>
 
-          {/* Programs */}
+          {/* Algorithmaze Academy - Hub */}
           <div>
-            <h4 className="text-white font-bold mb-6 uppercase tracking-widest text-xs">Programs</h4>
+            <h4 className="text-white font-bold mb-6 uppercase tracking-widest text-xs">Algorithmaze Academy</h4>
             <ul className="space-y-4">
-              {['AI Bootcamp', 'Robotics & IoT', 'Fullstack AI', 'UI/UX Design'].map(item => (
-                <li key={item}>
-                  <a href="#courses" className="text-cyan-50/50 hover:text-teal-green transition-colors text-sm">{item}</a>
+              {[
+                { name: 'AI Bootcamps', href: '/courses' },
+                { name: 'Robotics & IoT Labs', href: '/courses' },
+                { name: 'Academic Internships', href: '/internships' },
+                { name: 'Innovation Workshops', href: '/courses' }
+              ].map(item => (
+                <li key={item.name}>
+                  <a href={item.href} className="text-cyan-50/50 hover:text-teal-green transition-colors text-sm">{item.name}</a>
                 </li>
               ))}
             </ul>

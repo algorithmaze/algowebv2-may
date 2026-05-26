@@ -22,7 +22,7 @@ async function testConnection() {
   } catch (error) {
     console.error('❌ Failed to connect to MySQL database:', error.message);
     console.warn('⚠️ Please ensure MySQL is running and the credentials in .env are correct.');
-    return false;
+    return error.message;
   }
 }
 

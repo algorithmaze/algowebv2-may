@@ -291,8 +291,9 @@ export default function RegistrationPage() {
         const finalRefNo = data.refNo || `AMAI_TEMP_${Date.now()}`;
         navigate(`/success/${finalRefNo}?type=${actualType}`);
       } else {
+        const errData = await res.json().catch(() => ({}));
         setStatus('error');
-        setErrorMessage('Failed to submit registration.');
+        setErrorMessage(errData.message || 'Failed to submit registration.');
       }
     } catch (err) {
       setStatus('error');

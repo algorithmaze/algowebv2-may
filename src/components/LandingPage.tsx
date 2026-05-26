@@ -1,7 +1,7 @@
 import HeroSequence from "./HeroSequence";
 import FloatingText from "./FloatingText";
 import Navbar from "./Navbar";
-import { ProjectsSection, TeamSection, ContactSection, FeaturesSection, FAQSection } from "./ContentSections";
+import { ProjectsSection, TeamSection, ContactSection, ServicesSection, FAQSection, WingsSection, VisionMissionSection } from "./ContentSections";
 import { Link } from "react-router-dom";
 import { motion, useScroll, useSpring, useTransform } from "framer-motion";
 import { useRef, useEffect } from "react";
@@ -65,19 +65,21 @@ export default function LandingPage() {
         <div className="sticky top-0 h-screen w-full z-0 overflow-hidden">
           <div className="absolute inset-0 z-10 bg-noise opacity-[0.03] pointer-events-none" />
           <HeroSequence totalFrames={60} progress={smoothProgress} />
-          <FloatingText progress={smoothProgress} start={0.0} end={0.16} leftText={<>Unlock The<br/><span className="text-electric-blue drop-shadow-[0_0_15px_rgba(0,229,255,0.4)]">Power of AI.</span></>} rightText="Every future begins with wonder." />
-          <FloatingText progress={smoothProgress} start={0.16} end={0.33} reverse={true} leftText={<>Code The<br/><span className="text-teal-green drop-shadow-[0_0_15px_rgba(0,255,198,0.4)]">Impossible.</span></>} rightText="Imagination becomes real." />
-          <FloatingText progress={smoothProgress} start={0.33} end={0.5} leftText={<>Master Machine<br/><span className="text-electric-blue drop-shadow-[0_0_15px_rgba(0,229,255,0.4)]">Learning.</span></>} rightText="Learn beyond limits." />
-          <FloatingText progress={smoothProgress} start={0.5} end={0.66} reverse={true} leftText={<>Build The<br/><span className="text-teal-green drop-shadow-[0_0_15px_rgba(0,255,198,0.4)]">Future.</span></>} rightText="Create the impossible." />
-          <FloatingText progress={smoothProgress} start={0.66} end={0.83} leftText={<>Unleash<br/><span className="text-electric-blue drop-shadow-[0_0_15px_rgba(0,229,255,0.4)]">Innovation.</span></>} rightText="Infinite Intelligence." />
-          <FloatingText progress={smoothProgress} start={0.83} end={1.0} isLast={true} reverse={true} leftText={<>Shape Tomorrow,<br/><span className="text-teal-green drop-shadow-[0_0_15px_rgba(0,255,198,0.4)]">Today.</span></>} rightText={<div className="flex flex-col items-start gap-8"><p>Join AlgorithmazeAI and shape the future.</p><a href="/courses" className="px-8 py-4 text-lg bg-gradient-to-r from-electric-blue to-teal-green text-dark-black font-extrabold rounded-full shadow-[0_0_20px_rgba(0,255,198,0.4)] hover:shadow-[0_0_40px_rgba(0,255,198,0.8)] hover:scale-105 transition-all duration-300 cursor-pointer pointer-events-auto inline-block">Join the Revolution</a></div>} />
+          <FloatingText progress={smoothProgress} start={0.0} end={0.16} leftText={<>Empowering Innovation.<br/><span className="text-electric-blue drop-shadow-[0_0_15px_rgba(0,229,255,0.4)]">Algorithmaze AI.</span></>} rightText="Pioneering AI solutions, smart automation, IoT, and robotics for modern enterprises, startups, and schools." />
+          <FloatingText progress={smoothProgress} start={0.16} end={0.33} reverse={true} leftText={<>Empowering Minds.<br/><span className="text-teal-green drop-shadow-[0_0_15px_rgba(0,255,198,0.4)]">Algorithmaze Academy.</span></>} rightText="A practical technology learning hub fostering hands-on coding, robotics workshops, and real-world internships." />
+          <FloatingText progress={smoothProgress} start={0.33} end={0.5} leftText={<>Advanced Enterprise<br/><span className="text-electric-blue drop-shadow-[0_0_15px_rgba(0,229,255,0.4)]">Automation.</span></>} rightText="Accelerate operations with smart digital ecosystems, custom AI agents, and IoT networks built for scale." />
+          <FloatingText progress={smoothProgress} start={0.5} end={0.66} reverse={true} leftText={<>Hands-on Project<br/><span className="text-teal-green drop-shadow-[0_0_15px_rgba(0,255,198,0.4)]">Mentorship.</span></>} rightText="Learn future-ready tech stack skills from industry masterminds and build verified portfolio items." />
+          <FloatingText progress={smoothProgress} start={0.66} end={0.83} leftText={<>Infinite Intelligence,<br/><span className="text-electric-blue drop-shadow-[0_0_15px_rgba(0,229,255,0.4)]">Endless Innovation.</span></>} rightText="Bridging the gap between human curiosity and cutting-edge industrial technology solutions." />
+          <FloatingText progress={smoothProgress} start={0.83} end={1.0} isLast={true} reverse={true} leftText={<>Build the Future,<br/><span className="text-teal-green drop-shadow-[0_0_15px_rgba(0,255,198,0.4)]">With Us.</span></>} rightText={<div className="flex flex-col items-start gap-6"><p>We build cutting-edge industrial systems and train you to engineer the exact same. Explore both our solutions and educational programs.</p><div className="flex flex-wrap gap-4 pointer-events-auto"><a href="#wings" className="px-6 py-3.5 text-xs bg-gradient-to-r from-electric-blue to-teal-green text-dark-black font-extrabold rounded-xl shadow-[0_0_20px_rgba(0,255,198,0.3)] hover:shadow-[0_0_40px_rgba(0,255,198,0.6)] hover:scale-105 transition-all duration-300">Explore Our Focus</a></div></div>} />
         </div>
       </main>
 
       <div className="relative z-20 w-full bg-dark-black">
-        <TeamSection />
+        <WingsSection />
+        <VisionMissionSection />
+        <ServicesSection />
         <ProjectsSection />
-        <FeaturesSection />
+        <TeamSection />
         
         <section className="py-24 relative border-t border-white/5 bg-dark-black z-20 overflow-hidden text-center">
           <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-electric-blue/5 blur-[120px] rounded-full pointer-events-none" />
