@@ -59,7 +59,7 @@ export default function InternshipDetail() {
             {/* Header section */}
             <div className="mb-12">
               <Link to="/internships" className="text-teal-green hover:text-white transition-colors mb-6 inline-flex items-center gap-2 font-bold group">
-                <span className="group-hover:-translate-x-1 transition-transform">←</span> Back to Internship Tracks
+                <span className="group-hover:-translate-x-1 transition-transform">←</span> Back to Incubator Tracks
               </Link>
               
               <div className="flex items-center gap-6 mb-8">
@@ -68,7 +68,7 @@ export default function InternshipDetail() {
                 </div>
                 <div>
                   <div className="px-4 py-1.5 bg-teal-green/20 border border-teal-green/30 rounded-full text-xs font-black uppercase tracking-widest text-teal-green inline-block mb-4">
-                    Internship Track
+                    Incubator Track
                   </div>
                   <h1 className="text-3xl md:text-5xl font-black leading-tight text-white">
                     {track.title}
@@ -87,14 +87,14 @@ export default function InternshipDetail() {
                 {/* Benefits */}
                 <div>
                   <h3 className="text-2xl font-bold mb-6 flex items-center gap-3 text-white uppercase tracking-widest text-sm">
-                    Track Highlights
+                    Incubator Highlights
                   </h3>
                   <div className="space-y-4">
                     {[
-                      { title: "Real-World Experience", desc: "Work on actual client projects and internal tools used by the community.", icon: "rocket_launch" },
-                      { title: "Expert Mentorship", desc: "Get 1-on-1 guidance from experienced engineers and designers.", icon: "school" },
-                      { title: "Academic Compliance", desc: "Adheres to UGC & AICTE mandates to bridge the gap between theory and industry practice.", icon: "account_balance" },
-                      { title: "Placement Support", desc: "Access to our network of partner companies for potential job opportunities.", icon: "verified" }
+                      { title: "Product Co-Building", desc: "Work directly beside founders to write production-grade logic for our startup products and clients.", icon: "rocket_launch" },
+                      { title: "Founder Collaboration", desc: "Get daily feedback, code reviews, and hardware validation from active developers.", icon: "school" },
+                      { title: "Academic Compliance", desc: "Fully compliant with UGC & AICTE guidelines. Earn valid internship experience letters and credit verification.", icon: "account_balance" },
+                      { title: "Startup Network Pathways", desc: "Direct pathways and referrals to fast-growth tech startups and client networks.", icon: "verified" }
                     ].map((item, i) => (
                       <div key={i} className="glass-ui !p-6 border border-white/5 hover:border-teal-green/30 transition-all group flex gap-5">
                         <span className="material-symbols-outlined text-3xl text-teal-green flex-shrink-0">{item.icon}</span>
@@ -110,26 +110,26 @@ export default function InternshipDetail() {
                 {/* Structure */}
                 <div>
                    <h3 className="text-2xl font-bold mb-6 flex items-center gap-3 text-white uppercase tracking-widest text-sm">
-                    Internship Structure
+                    Incubator Program Structure
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="glass-ui !p-6 border border-teal-green/10">
                        <h4 className="font-bold text-white mb-2 flex items-center gap-2">
-                         <span className="material-symbols-outlined text-teal-green">hourglass_empty</span> Available Durations
+                         <span className="material-symbols-outlined text-teal-green">hourglass_empty</span> Collaboration Timeline
                        </h4>
                        <p className="text-cyan-50/60 text-xs leading-relaxed">
-                         Choose based on your college requirement: <br/>
-                         <span className="text-white/80 font-bold">15 Days | 1 Month | 3 Months | 6 Months</span>
+                         Choose based on your academic timeline: <br/>
+                         <span className="text-white/80 font-bold">1 to 6 Months Flexible Duration Tracks</span>
                        </p>
                     </div>
                     <div className="glass-ui !p-6 border border-electric-blue/10">
                        <h4 className="font-bold text-white mb-2 flex items-center gap-2">
-                         <span className="material-symbols-outlined text-electric-blue">folder_open</span> Project Levels
+                         <span className="material-symbols-outlined text-electric-blue">folder_open</span> Builder Deliverables
                        </h4>
                        <p className="text-cyan-50/60 text-xs leading-relaxed">
-                         Dedicated support for: <br/>
-                         <span className="text-white/80 font-bold">Mini Projects</span> (Pre-final year) <br/>
-                         <span className="text-white/80 font-bold">Major Projects</span> (Final year submissions)
+                         Develop: <br/>
+                         <span className="text-white/80 font-bold">Verifiable Public Portfolios</span> (GitHub & Live Demos) <br/>
+                         <span className="text-white/80 font-bold">Physical IoT Hardware Prototypes</span>
                        </p>
                     </div>
                   </div>
@@ -139,20 +139,20 @@ export default function InternshipDetail() {
               {/* Sidebar / CTA */}
               <div className="lg:col-span-1">
                 <div className="sticky top-32 glass-ui !p-8 border-t-2 border-t-teal-green shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
-                  <h3 className="text-xl font-bold mb-6 text-center">Ready to Start?</h3>
+                  <h3 className="text-xl font-bold mb-6 text-center">Ready to Build?</h3>
                   
                   <button 
                     onClick={() => navigate(`/register/internship/${track.slug}?name=${encodeURIComponent(track.title)}`)}
-                    className="w-full py-5 bg-white text-dark-black font-black text-xl rounded-2xl shadow-[0_10px_30px_rgba(255,255,255,0.1)] hover:shadow-[0_15px_40px_rgba(255,255,255,0.2)] hover:-translate-y-1 transition-all active:scale-95 flex items-center justify-center gap-3"
+                    className="w-full py-5 bg-gradient-to-r from-teal-green to-electric-blue text-dark-black font-black text-xl rounded-2xl shadow-[0_15px_30px_rgba(0,255,198,0.2)] hover:shadow-[0_20px_40px_rgba(0,255,198,0.4)] hover:-translate-y-1 transition-all active:scale-95 flex items-center justify-center gap-3 group/btn cursor-pointer"
                   >
-                    Apply Now
-                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                    Apply to Incubator
+                    <span className="transform group-hover/btn:translate-x-1 transition-transform">→</span>
                   </button>
                   
                   <div className="mt-8 pt-8 border-t border-white/10 text-center">
-                    <p className="text-xs text-white/40 font-bold uppercase tracking-widest mb-4">Limited Slots Available</p>
+                    <p className="text-xs text-white/40 font-bold uppercase tracking-widest mb-4">Limited Spots Available</p>
                     <div className="p-4 bg-teal-green/10 rounded-xl border border-teal-green/20">
-                      <p className="text-teal-green text-sm font-bold">Applications for Batch 2026 are now open!</p>
+                      <p className="text-teal-green text-sm font-bold">Incubator Batch 2026 applications are currently open.</p>
                     </div>
                   </div>
                 </div>

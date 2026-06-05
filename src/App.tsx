@@ -9,13 +9,19 @@ import RegistrationPage from "./components/RegistrationPage";
 import CourseDetail from "./components/CourseDetail";
 import InternshipDetail from "./components/InternshipDetail";
 import SuccessPage from "./components/SuccessPage";
+import AboutPage from "./components/AboutPage";
+import PrivacyPage from "./components/PrivacyPage";
+import CustomCursor from "./components/CustomCursor";
 
 function App() {
   return (
     <ReactLenis root options={{ smoothWheel: true, duration: 1.2 }}>
+      <CustomCursor />
       <Router>
         <Routes>
           <Route path="/" element={<LandingPage />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/courses" element={<CoursesPage />} />
           <Route path="/courses/:slug" element={<CourseDetail />} />
           <Route path="/internships" element={<InternshipsPage />} />

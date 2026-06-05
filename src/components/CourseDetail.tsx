@@ -61,7 +61,7 @@ export default function CourseDetail() {
             {/* Header section */}
             <div className="mb-16">
               <Link to="/courses" className="text-electric-blue hover:text-white transition-colors mb-8 inline-flex items-center gap-2 font-black uppercase tracking-widest text-xs group">
-                <span className="group-hover:-translate-x-1 transition-transform">←</span> Back to All Courses
+                <span className="group-hover:-translate-x-1 transition-transform">←</span> Back to All Programs
               </Link>
               
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
@@ -113,7 +113,7 @@ export default function CourseDetail() {
                   <div>
                     <h3 className="text-2xl font-black mb-8 flex items-center gap-4 text-white uppercase tracking-widest">
                       <span className="w-2 h-10 bg-electric-blue rounded-full" />
-                      Learning Outcomes
+                      Program Focus Areas
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {course.features.map((feature: string, i: number) => (
@@ -133,19 +133,19 @@ export default function CourseDetail() {
                    <div className="absolute top-0 right-0 w-32 h-32 bg-electric-blue/5 blur-3xl rounded-full" />
                    <h3 className="text-2xl font-black mb-6 flex items-center gap-4">
                       <span className="material-symbols-outlined text-3xl text-electric-blue">account_balance</span>
-                      Industry Integrated Curriculum
+                      Project-Led Accelerator Curriculum
                    </h3>
                    <p className="text-cyan-50/60 leading-relaxed text-lg mb-8">
-                     Our curriculum is designed to be 100% practical. You'll spend less time on theory and more time building real-world projects that you can showcase in your portfolio. From day one, you'll be working with industry-standard tools and technologies.
+                     Our training is designed to be 100% practical and execution-oriented. You will learn by building production-grade workflows and deploying physical sensor modules, developing a concrete portfolio that proves your technical competence.
                    </p>
                    <div className="flex flex-wrap gap-6">
                       <div className="flex items-center gap-3">
                          <div className="w-2 h-2 rounded-full bg-teal-green" />
-                         <span className="text-xs font-bold text-white/40 uppercase tracking-widest">Live Projects</span>
+                         <span className="text-xs font-bold text-white/40 uppercase tracking-widest">Production Workflows</span>
                       </div>
                       <div className="flex items-center gap-3">
                          <div className="w-2 h-2 rounded-full bg-teal-green" />
-                         <span className="text-xs font-bold text-white/40 uppercase tracking-widest">Expert Mentorship</span>
+                         <span className="text-xs font-bold text-white/40 uppercase tracking-widest">Founder Guidance</span>
                       </div>
                       <div className="flex items-center gap-3">
                          <div className="w-2 h-2 rounded-full bg-teal-green" />

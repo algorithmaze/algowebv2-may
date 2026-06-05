@@ -17,22 +17,21 @@ export default function InternshipsPage() {
         <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-teal-green/5 blur-[120px] rounded-full pointer-events-none z-0" />
         
         <div className="relative z-10 text-center py-16 px-6">
-          <h1 className="text-4xl md:text-7xl font-black mb-6 tracking-tight drop-shadow-2xl text-transparent bg-clip-text bg-gradient-to-r from-white via-teal-green to-electric-blue">
-            Industrial Internship 2026
+          <h1 className="text-4xl md:text-7xl font-black mb-6 tracking-tight drop-shadow-2xl text-transparent bg-clip-text bg-gradient-to-r from-white via-teal-green to-electric-blue uppercase">
+            Tech Incubator
           </h1>
           <p className="text-xl md:text-2xl text-cyan-50/70 font-light max-w-3xl mx-auto leading-relaxed">
-            Bridge the gap between academics and industry with our expert-led programs. 
-            Designed for the next generation of tech leaders.
+            A fast-paced, practical co-building ecosystem. Collaborate directly on active startup products, wire physical IoT prototypes, and learn by shipping live code.
           </p>
 
           {/* Quick Stats/Hooks */}
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4 max-w-5xl mx-auto mt-12">
             {[
-              { icon: "track_changes", label: "Students / Freshers" },
-              { icon: "work", label: "Practical Training" },
-              { icon: "workspace_premium", label: "Recognized Certificate" },
-              { icon: "rocket_launch", label: "Career Focused" },
-              { icon: "verified", label: "Placement Support" }
+              { icon: "handyman", label: "Live Co-Building" },
+              { icon: "verified", label: "Proof of Work" },
+              { icon: "rocket_launch", label: "Startup Culture" },
+              { icon: "school", label: "Credit Compliant" },
+              { icon: "trending_up", label: "Direct Referrals" }
             ].map((stat, i) => (
               <div key={i} className="glass-ui !p-4 border border-white/5 flex flex-col items-center gap-2 hover:border-teal-green/30 transition-all">
                 <span className="material-symbols-outlined text-2xl text-teal-green">{stat.icon}</span>
@@ -52,21 +51,20 @@ export default function InternshipsPage() {
               <div className="space-y-12">
                 <div>
                   <h2 className="text-4xl md:text-5xl font-black mb-6 leading-tight">
-                    More Than Just a <br/>
-                    <span className="text-teal-green">Certificate.</span>
+                    Practical Co-Building <br/>
+                    <span className="text-teal-green">Ecosystem.</span>
                   </h2>
                   <p className="text-cyan-50/60 text-lg leading-relaxed max-w-xl">
-                    We deliver practical industrial training that transforms students into professionals, 
-                    fully compliant with academic requirements.
+                    We don't do theory; we build practical software and hardware tools. Collaborate directly beside core founders to write production integrations and wire edge controllers.
                   </p>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                   {[
-                    { title: "Academic Compliance", desc: "Adheres to UGC & AICTE mandates to bridge the gap between theory and industry practice.", icon: "account_balance" },
-                    { title: "Flexible Durations", desc: "15 Days to 6 Months programs tailored to your university requirements.", icon: "hourglass_empty" },
-                    { title: "Project Mentorship", desc: "Expert guidance for both Mini (Pre-final) and Major (Final Year) projects.", icon: "folder_open" },
-                    { title: "Career Placement", desc: "100% placement support with access to our elite hiring partner network.", icon: "verified" }
+                    { title: "Academic Compliance", desc: "Fully compliant with UGC & AICTE guidelines. Earn valid internship experience letters and credit verification.", icon: "account_balance" },
+                    { title: "Flexible Durations", desc: "Flexible co-building tracks from 1 to 6 months designed to fit your academic timeline.", icon: "hourglass_empty" },
+                    { title: "Project Portfolios", desc: "Construct verifiable public portfolios and strong GitHub profiles validated by shipped code, not exams.", icon: "folder_open" },
+                    { title: "Direct Pathways", desc: "Direct placement opportunities and referrals within our fast-growing startup and client network.", icon: "verified" }
                   ].map((feat, i) => (
                     <div key={i} className="group">
                       <span className="material-symbols-outlined text-3xl text-teal-green mb-4 group-hover:scale-110 transition-transform origin-left block">{feat.icon}</span>
@@ -83,33 +81,32 @@ export default function InternshipsPage() {
                 
                 <div className="relative z-10">
                    <div className="px-4 py-1.5 bg-teal-green/20 border border-teal-green/30 rounded-full text-[10px] font-black uppercase tracking-widest text-teal-green inline-block mb-8">
-                     Professional Excellence
-                   </div>
-                   <h2 className="text-3xl font-black mb-10">Why Students Choose Us?</h2>
+                     Tech Incubator
+                    </div>
+                    <h2 className="text-3xl font-black mb-10">Why Choose Tech Incubator?</h2>
                    
                    <ul className="space-y-8">
                       {[
-                        { q: "NEP 2020 Aligned", a: "Strictly aligned with National Education Policy standards for credit transfers." },
-                        { q: "Industrial Training", a: "Practical hands-on experience with live industrial tools and modern tech stacks." },
-                        { q: "Verifiable Portfolios", a: "Build a strong, industry-ready GitHub profile validated by our experts." }
+                        { q: "Credit Compliant", a: "Strictly aligned with National Education Policy standards for credit transfers and college internship approvals." },
+                        { q: "Real Product Delivery", a: "No mockup sandboxes. Flash custom firmware to active IoT boards and deploy APIs to production." },
+                        { q: "Founder Access", a: "Collaborate directly with startup builders who review your code and guide your engineering decisions." }
                       ].map((item, i) => (
                         <li key={i} className="flex gap-6">
-                          <div className="w-10 h-10 rounded-2xl bg-white/5 border border-white/10 flex-shrink-0 flex items-center justify-center text-teal-green group-hover:bg-teal-green group-hover:text-dark-black transition-all">
-                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-                          </div>
-                          <div>
-                            <h4 className="font-bold text-white mb-1">{item.q}</h4>
-                            <p className="text-sm text-cyan-50/60 leading-relaxed">{item.a}</p>
-                          </div>
-                        </li>
-                      ))}
+                           <div className="w-10 h-10 rounded-2xl bg-white/5 border border-white/10 flex-shrink-0 flex items-center justify-center text-teal-green group-hover:bg-teal-green group-hover:text-dark-black transition-all">
+                              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                           </div>
+                           <div>
+                             <h4 className="font-bold text-white mb-1">{item.q}</h4>
+                             <p className="text-sm text-cyan-50/60 leading-relaxed">{item.a}</p>
+                           </div>
+                         </li>
+                       ))}
                    </ul>
 
                    <div className="mt-12 p-6 bg-dark-black/60 rounded-2xl border border-white/5">
-                      <p className="text-xs text-teal-green font-black uppercase tracking-[0.2em] mb-3">Institutional Compliance</p>
+                      <p className="text-xs text-teal-green font-black uppercase tracking-[0.2em] mb-3">Academic Integration</p>
                       <p className="text-sm text-cyan-50/50 italic leading-relaxed">
-                        Our internship certifications strictly adhere to the mandates of UGC and AICTE, 
-                        bridging the critical gap between academic theory and practical industry experience.
+                        All co-building tracks are fully compliant with UGC and AICTE internship guidelines. We verify credit transfers and issue formal industry experience letters.
                       </p>
                    </div>
                 </div>
@@ -120,8 +117,8 @@ export default function InternshipsPage() {
 
         <section className="py-20">
           <div className="container mx-auto px-6">
-            <h2 className="text-3xl md:text-5xl font-black text-center mb-4 uppercase tracking-tighter italic">Choose Your Domain</h2>
-            <p className="text-center text-cyan-50/50 mb-16 max-w-xl mx-auto">Explore our diverse internship tracks and pick the one that matches your career goals.</p>
+            <h2 className="text-3xl md:text-5xl font-black text-center mb-4 uppercase tracking-tighter italic">Active Incubator <span className="text-teal-green">Tracks</span></h2>
+            <p className="text-center text-cyan-50/50 mb-16 max-w-xl mx-auto">Choose an active engineering track to apply your skills on real software products and physical hardware prototypes.</p>
             <InternshipSection />
           </div>
         </section>

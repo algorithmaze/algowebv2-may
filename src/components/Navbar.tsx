@@ -20,9 +20,9 @@ export default function Navbar() {
 
   const navLinks = [
     { name: "Services", href: "/#services" },
-    { name: "Team", href: "/#team" },
-    { name: "Courses", href: "/courses" },
-    { name: "Internships", href: "/internships" },
+    { name: "About", href: "/about" },
+    { name: "Training", href: "/courses" },
+    { name: "Internship", href: "/internships" },
     { name: "Contact", href: "/#contact" },
   ];
 
@@ -65,7 +65,7 @@ export default function Navbar() {
             }
           }}
         >
-          <img src="/images/amlogo.png" alt="AlgorithmazeAI Logo" className="w-10 h-10 md:w-12 md:h-12 object-contain group-hover:scale-105 transition-transform duration-300 drop-shadow-[0_0_15px_rgba(0,255,198,0.3)] group-hover:drop-shadow-[0_0_25px_rgba(0,255,198,0.6)]" />
+          <img src="/images/amlogo.png" alt="AlgorithmAze AI Logo" className="w-10 h-10 md:w-12 md:h-12 object-contain group-hover:scale-105 transition-transform duration-300 drop-shadow-[0_0_15px_rgba(0,255,198,0.3)] group-hover:drop-shadow-[0_0_25px_rgba(0,255,198,0.6)]" />
           <span className="text-xl md:text-2xl font-extrabold font-sans tracking-tight text-white flex items-center">
             Algorithmaze<span className="text-electric-blue">AI</span>
           </span>
@@ -92,7 +92,7 @@ export default function Navbar() {
             <Button 
               className="bg-gradient-to-r from-electric-blue to-teal-green hover:brightness-110 text-dark-black font-black uppercase tracking-widest text-[10px] px-6 py-2.5 rounded-xl shadow-[0_0_20px_rgba(0,229,255,0.4)] hover:shadow-[0_0_40px_rgba(0,229,255,0.7)] hover:scale-105 transition-all duration-300 border-none flex cursor-pointer"
             >
-              Join Revolution
+              Explore Training
             </Button>
           </a>
           
@@ -121,7 +121,7 @@ export default function Navbar() {
           ))}
           <a href="/courses" onClick={handleScrollTo} className="mt-8">
             <Button className="bg-electric-blue text-dark-black font-black uppercase tracking-widest px-10 py-6 rounded-2xl text-lg">
-              Get Started
+              Explore Training
             </Button>
           </a>
         </div>

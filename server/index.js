@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('dotenv').config({ path: require('path').join(__dirname, '.env') });
 const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
@@ -86,193 +86,457 @@ const transporter = nodemailer.createTransport({
 const sendConfirmationEmail = async (email, name, course, refNo, paymentStatus, amount, isMessage = false, messageBody = '', extraData = {}) => {
   try {
     const adminEmail = 'algorithmazeai@gmail.com';
+    const senderEmail = process.env.EMAIL_USER || 'algorithmazeai@gmail.com';
     let mailOptions;
 
     if (isMessage) {
-      mailOptions = {
-        from: process.env.EMAIL_USER || 'your_email@gmail.com',
-        to: adminEmail,
-        subject: `New Contact Message from ${name}`,
-        html: `<h2>New Contact Inquiry</h2><p><strong>Name:</strong> ${name}</p><p><strong>Email:</strong> ${email}</p><p><strong>Phone:</strong> ${course}</p><p><strong>Message:</strong> ${messageBody}</p>`
-      };
-    } else {
-      const invoiceDate = new Date().toLocaleDateString('en-IN', {
-        day: '2-digit',
-        month: 'long',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true
-      });
-
-      const amtPaid = extraData.amountPaid || 0;
-      const amtDue = extraData.amountDue || 0;
-      const totalFee = Number(amtPaid) + Number(amtDue);
-      const isFullPayment = Number(amtDue) === 0 && Number(amtPaid) > 0;
-      const isPartPayment = Number(amtPaid) > 0 && Number(amtDue) > 0;
-      const isPayOnDay = paymentStatus === 'Pay on Day (Cash)' || extraData.paymentStatus === 'Pay on Day';
-      const isFree = paymentStatus === 'Free Registration' || extraData.paymentStatus === 'Free';
-
-      let invoiceStatusBadge = '';
-      if (isFullPayment) {
-        invoiceStatusBadge = `<span style="background-color: #00ffc6; color: #08080c; padding: 6px 14px; border-radius: 6px; font-size: 11px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; display: inline-block;">Fully Paid / Verified</span>`;
-      } else if (isPartPayment) {
-        invoiceStatusBadge = `<span style="background-color: #f59e0b; color: #08080c; padding: 6px 14px; border-radius: 6px; font-size: 11px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; display: inline-block;">Advance Paid / Balance Pending</span>`;
-      } else if (isPayOnDay) {
-        invoiceStatusBadge = `<span style="background-color: #3b82f6; color: #ffffff; padding: 6px 14px; border-radius: 6px; font-size: 11px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; display: inline-block;">Cash Booking / Pay on Spot</span>`;
-      } else if (isFree) {
-        invoiceStatusBadge = `<span style="background-color: #10b981; color: #ffffff; padding: 6px 14px; border-radius: 6px; font-size: 11px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; display: inline-block;">Free Registration</span>`;
-      } else {
-        invoiceStatusBadge = `<span style="background-color: #6b7280; color: #ffffff; padding: 6px 14px; border-radius: 6px; font-size: 11px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; display: inline-block;">Confirmed / Applied</span>`;
-      }
-
-      const htmlBody = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="utf-8">
-        <title>Registration Tax Invoice - AlgorithmazeAI</title>
-      </head>
-      <body style="margin: 0; padding: 0; background-color: #07070a; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #e2e8f0;">
-        <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 650px; background-color: #0b0c10; margin: 30px auto; border: 1px solid #1f2937; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,229,255,0.05);">
-          <!-- Glowing Header -->
-          <tr>
-            <td style="padding: 30px 40px; background: linear-gradient(135deg, #0f172a 0%, #020617 100%); border-bottom: 2px solid #00e5ff;">
-              <table width="100%" border="0" cellpadding="0" cellspacing="0">
-                <tr>
-                  <td>
-                    <h1 style="margin: 0; font-size: 26px; font-weight: 900; color: #ffffff; letter-spacing: -0.5px;">ALGORITHMAZE<span style="color: #00e5ff;">AI</span></h1>
-                    <p style="margin: 4px 0 0 0; font-size: 10px; font-weight: 700; color: #94a3b8; letter-spacing: 2px; text-transform: uppercase;">Next-Gen AI & Tech Learning</p>
-                  </td>
-                  <td align="right">
-                    <p style="margin: 0; font-size: 13px; font-weight: 800; color: #00e5ff; text-transform: uppercase; letter-spacing: 1px;">TAX INVOICE</p>
-                    <p style="margin: 4px 0 0 0; font-size: 11px; font-weight: 600; color: #64748b; font-family: monospace;">${refNo}</p>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-
-          <!-- Invoice Details Card -->
-          <tr>
-            <td style="padding: 24px 40px; background-color: #0f172a; border-bottom: 1px solid #1f2937;">
-              <table width="100%" border="0" cellpadding="0" cellspacing="0">
-                <tr>
-                  <td width="50%" style="vertical-align: top;">
-                    <p style="margin: 0 0 6px 0; font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 1px;">BILLED TO (STUDENT)</p>
-                    <p style="margin: 0 0 2px 0; font-size: 15px; font-weight: 800; color: #ffffff;">${name}</p>
-                    <p style="margin: 0 0 2px 0; font-size: 12px; color: #94a3b8; font-weight: 500;">${email}</p>
-                    <p style="margin: 0; font-size: 12px; color: #94a3b8; font-family: monospace;">${extraData.phone || ''}</p>
-                  </td>
-                  <td width="50%" align="right" style="vertical-align: top;">
-                    <p style="margin: 0 0 6px 0; font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 1px;">INVOICE DETAILS</p>
-                    <p style="margin: 0 0 4px 0; font-size: 12px; color: #94a3b8; font-weight: 500;"><strong>Date:</strong> ${invoiceDate}</p>
-                    <p style="margin: 0 0 8px 0; font-size: 12px; color: #94a3b8; font-weight: 500;"><strong>Payment Status:</strong> ${extraData.paymentStatus || 'Applied'}</p>
-                    <div style="margin-top: 4px;">${invoiceStatusBadge}</div>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-
-          <!-- Product Details Table -->
-          <tr>
-            <td style="padding: 40px 40px 20px 40px;">
-              <table width="100%" border="0" cellpadding="0" cellspacing="0" style="border-collapse: collapse;">
-                <thead>
-                  <tr style="border-bottom: 2px solid #1f2937;">
-                    <th align="left" style="padding: 0 0 12px 0; font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px;">Item Description</th>
-                    <th align="center" style="padding: 0 0 12px 0; font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px;">Qty</th>
-                    <th align="right" style="padding: 0 0 12px 0; font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px;">Total Price</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr style="border-bottom: 1px solid #1f2937;">
-                    <td style="padding: 16px 0; vertical-align: top;">
-                      <p style="margin: 0; font-size: 14px; font-weight: 800; color: #ffffff;">${course}</p>
-                      <p style="margin: 4px 0 0 0; font-size: 11px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Type: ${extraData.type === 'internship' ? 'Internship track' : 'Specialized Program'}</p>
-                      ${extraData.duration ? `<p style="margin: 2px 0 0 0; font-size: 11px; color: #64748b; font-weight: 500;">Duration: ${extraData.duration}</p>` : ''}
-                    </td>
-                    <td align="center" style="padding: 16px 0; font-size: 13px; font-weight: 700; color: #e2e8f0; vertical-align: top;">1</td>
-                    <td align="right" style="padding: 16px 0; font-size: 14px; font-weight: 800; color: #ffffff; vertical-align: top;">₹${totalFee}/-</td>
-                  </tr>
-
-                  <!-- Calculations -->
-                  <tr>
-                    <td colspan="2" align="right" style="padding: 16px 0 8px 0; font-size: 12px; font-weight: 600; color: #64748b;">Subtotal</td>
-                    <td align="right" style="padding: 16px 0 8px 0; font-size: 12px; font-weight: 700; color: #e2e8f0;">₹${totalFee}/-</td>
-                  </tr>
-                  <tr>
-                    <td colspan="2" align="right" style="padding: 8px 0; font-size: 12px; font-weight: 700; color: #00ffc6; border-bottom: 1px solid #1f2937;">Registration Fee Paid (Advance)</td>
-                    <td align="right" style="padding: 8px 0; font-size: 13px; font-weight: 900; color: #00ffc6; border-bottom: 1px solid #1f2937;">₹${amtPaid}/-</td>
-                  </tr>
-                  <tr>
-                    <td colspan="2" align="right" style="padding: 16px 0 0 0; font-size: 14px; font-weight: 900; color: #ffffff;">Balance Amount Due</td>
-                    <td align="right" style="padding: 16px 0 0 0; font-size: 16px; font-weight: 900; color: #ff5e62;">₹${amtDue}/-</td>
-                  </tr>
-                </tbody>
-              </table>
-            </td>
-          </tr>
-
-          <!-- Next Steps Notification -->
-          <tr>
-            <td style="padding: 20px 40px 30px 40px;">
-              <div style="background-color: #0f172a; border-left: 3px solid #00e5ff; padding: 20px; border-radius: 8px; border: 1px solid #1f2937; border-left-width: 4px;">
-                <h4 style="margin: 0 0 8px 0; font-size: 13px; font-weight: 800; color: #ffffff; text-transform: uppercase; letter-spacing: 0.5px;">📋 Instructions for Enrollment</h4>
-                <p style="margin: 0; font-size: 12px; color: #94a3b8; font-weight: 500; line-height: 1.6;">
-                  ${isPayOnDay 
-                    ? `Please prepare a cash payment of <strong>₹${amtDue}</strong> to be submitted on the day of the class. Ensure to bring a physical copy or screenshot of this invoice.` 
-                    : isPartPayment 
-                    ? `Your advance seat registration of <strong>₹${amtPaid}</strong> is confirmed via transaction ID <strong>${extraData.paymentId || 'Verified'}</strong>. The remaining balance of <strong>₹${amtDue}</strong> must be paid upon program commencement.`
-                    : isFree 
-                    ? `Your registration is free. Our program administrator will schedule your onboarding.`
-                    : `Your program fee of <strong>₹${amtPaid}</strong> is fully verified. Your account is fully active!`
-                  }
+      if (extraData.isProjectIntake) {
+        // Project Intake Auto-responder (to Client)
+        const clientHtml = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Got your project details - AlgorithmAze AI</title>
+        </head>
+        <body style="margin: 0; padding: 0; background-color: #06080D; font-family: 'Segoe UI', Roboto, sans-serif; color: #e2e8f0;">
+          <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; background-color: #0b0c10; margin: 30px auto; border: 1px solid #1f2937; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,229,255,0.05);">
+            <tr>
+              <td style="padding: 40px; background: linear-gradient(135deg, #0f172a 0%, #020617 100%); border-bottom: 2px solid #00ffc6;">
+                <h1 style="margin: 0; font-size: 24px; font-weight: 900; color: #ffffff; letter-spacing: -0.5px;">AlgorithmAze <span style="color: #00ffc6;">AI</span></h1>
+                <p style="margin: 4px 0 0 0; font-size: 10px; font-weight: 700; color: #94a3b8; letter-spacing: 2px; text-transform: uppercase;">Smart Automation & IoT Solutions</p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding: 40px; background-color: #0b0c10;">
+                <h2 style="margin: 0 0 20px 0; font-size: 18px; font-weight: 800; color: #ffffff;">Hi ${name},</h2>
+                <p style="font-size: 14px; line-height: 1.6; color: #94a3b8; margin: 0 0 20px 0;">
+                  Thank you for sharing your project details. We have received your request for a custom solution.
                 </p>
-              </div>
-            </td>
-          </tr>
+                <div style="background-color: #0f172a; border-left: 4px solid #00ffc6; padding: 20px; border-radius: 8px; margin-bottom: 25px; border: 1px solid #1f2937; border-left-width: 4px;">
+                  <p style="margin: 0; font-size: 14px; color: #ffffff; font-weight: 700; line-height: 1.6;">
+                    "We're a lean team and review requests quickly. Expect a technical follow-up from us within 24-48 hours."
+                  </p>
+                </div>
+                <div style="background-color: #0c0e12; border: 1px solid #1f2937; padding: 25px; border-radius: 12px; margin-bottom: 25px; text-align: left;">
+                  <h3 style="margin: 0 0 16px 0; font-size: 13px; font-weight: 800; color: #00ffc6; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #1f2937; padding-bottom: 8px;">Your Project Intake Summary</h3>
+                  <table width="100%" border="0" cellpadding="6" cellspacing="0" style="font-size: 13px; color: #94a3b8;">
+                    <tr>
+                      <td width="35%" style="font-weight: bold; color: #ffffff; padding: 6px 0; vertical-align: top;">Name:</td>
+                      <td style="padding: 6px 0; color: #e2e8f0; vertical-align: top;">${name}</td>
+                    </tr>
+                    <tr>
+                      <td style="font-weight: bold; color: #ffffff; padding: 6px 0; vertical-align: top;">Email:</td>
+                      <td style="padding: 6px 0; color: #e2e8f0; vertical-align: top;">${email}</td>
+                    </tr>
+                    <tr>
+                      <td style="font-weight: bold; color: #ffffff; padding: 6px 0; vertical-align: top;">Phone / WhatsApp:</td>
+                      <td style="padding: 6px 0; color: #e2e8f0; vertical-align: top;">${course || 'Not provided'}</td>
+                    </tr>
+                    <tr>
+                      <td style="font-weight: bold; color: #ffffff; padding: 6px 0; vertical-align: top;">Interested in:</td>
+                      <td style="padding: 6px 0; color: #e2e8f0; vertical-align: top;">${extraData.projectType || 'Custom Solution'}</td>
+                    </tr>
+                    <tr>
+                      <td style="font-weight: bold; color: #ffffff; padding: 6px 0; vertical-align: top;">Timeline:</td>
+                      <td style="padding: 6px 0; color: #e2e8f0; vertical-align: top;">${extraData.timeline || 'Flexible'}</td>
+                    </tr>
+                    <tr>
+                      <td colspan="2" style="font-weight: bold; color: #ffffff; padding: 12px 0 6px 0; border-top: 1px solid #1f2937; vertical-align: top;">Project Scope & Requirements:</td>
+                    </tr>
+                    <tr>
+                      <td colspan="2" style="padding: 12px; background-color: #0f172a; border-radius: 8px; color: #94a3b8; font-family: monospace; line-height: 1.5; white-space: pre-wrap; border: 1px solid #1f2937; vertical-align: top; text-align: left;">${messageBody}</td>
+                    </tr>
+                  </table>
+                </div>
+                <p style="font-size: 13px; color: #94a3b8; margin: 0;">We look forward to collaborating and building a high-impact system that eliminates friction for your business.</p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding: 30px 40px; background-color: #020617; border-top: 1px solid #1f2937; text-align: center;">
+                <p style="margin: 0; font-size: 11px; color: #475569; font-weight: 500;">© 2026 AlgorithmAze AI. All rights reserved.</p>
+                <p style="margin: 4px 0 0 0; font-size: 10px; color: #475569; font-weight: 500;">Trichy, Tamil Nadu, India • algorithmazeai@gmail.com • +91 7448991888</p>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
+        `;
 
-          <!-- Security and Seal -->
-          <tr>
-            <td style="padding: 0 40px 40px 40px;">
-              <table width="100%" border="0" cellpadding="0" cellspacing="0">
-                <tr>
-                  <td width="60%" style="vertical-align: bottom;">
-                    <p style="margin: 0; font-size: 10px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">✓ Direct Banking Receipt Verified</p>
-                    <p style="margin: 2px 0 0 0; font-size: 10px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">✓ Certified SSL Secure Transaction</p>
-                  </td>
-                  <td width="40%" align="right" style="vertical-align: bottom;">
-                    <div style="text-align: right;">
-                      <p style="margin: 0 0 5px 0; font-size: 11px; font-weight: 700; color: #64748b; font-style: italic;">AlgorithmazeAI Center</p>
-                      <div style="border-top: 1px dashed #475569; padding-top: 5px; font-size: 9px; font-weight: 900; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px;">Authorized Signatory</div>
-                    </div>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
+        // Send to Client
+        await transporter.sendMail({
+          from: senderEmail,
+          to: email,
+          subject: "Got your project details - AlgorithmAze AI",
+          html: clientHtml
+        });
 
-          <!-- Corporate Footer -->
-          <tr>
-            <td style="padding: 24px; background-color: #020617; border-top: 1px solid #1f2937; text-align: center;">
-              <p style="margin: 0; font-size: 11px; color: #475569; font-weight: 500;">© 2026 AlgorithmazeAI Platform. All rights reserved.</p>
-              <p style="margin: 4px 0 0 0; font-size: 10px; color: #475569; font-weight: 500;">Trichy, Tamil Nadu, India • support@algorithmazeai.com • +91 999 444 8888</p>
-            </td>
-          </tr>
-        </table>
-      </body>
-      </html>
-      `;
+        // Send to Admin
+        mailOptions = {
+          from: senderEmail,
+          to: adminEmail,
+          subject: `[Project Intake Inquiry] ${extraData.projectType || 'Custom Solution'} from ${name}`,
+          html: `
+            <h2>New B2B/B2C Project Intake Submission</h2>
+            <p><strong>Name:</strong> ${name}</p>
+            <p><strong>Email:</strong> ${email}</p>
+            <p><strong>Phone:</strong> ${course || 'Not provided'}</p>
+            <p><strong>Project Type:</strong> ${extraData.projectType || 'Not specified'}</p>
+            <p><strong>Timeline:</strong> ${extraData.timeline || 'Not specified'}</p>
+            <p><strong>Scope / Message:</strong></p>
+            <div style="background:#f4f4f5; padding:15px; border-radius:8px; font-family:monospace; color:#18181b;">${messageBody}</div>
+          `
+        };
+      } else {
+        // General Inquiry Auto-responder (to Client)
+        const clientGeneralHtml = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Message Received - AlgorithmAze AI</title>
+        </head>
+        <body style="margin: 0; padding: 0; background-color: #06080D; font-family: 'Segoe UI', Roboto, sans-serif; color: #e2e8f0;">
+          <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; background-color: #0b0c10; margin: 30px auto; border: 1px solid #1f2937; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,229,255,0.05);">
+            <tr>
+              <td style="padding: 40px; background: linear-gradient(135deg, #0f172a 0%, #020617 100%); border-bottom: 2px solid #00e5ff;">
+                <h1 style="margin: 0; font-size: 24px; font-weight: 900; color: #ffffff; letter-spacing: -0.5px;">AlgorithmAze <span style="color: #00e5ff;">AI</span></h1>
+                <p style="margin: 4px 0 0 0; font-size: 10px; font-weight: 700; color: #94a3b8; letter-spacing: 2px; text-transform: uppercase;">Smart Automation & IoT Solutions</p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding: 40px; background-color: #0b0c10;">
+                <h2 style="margin: 0 0 20px 0; font-size: 18px; font-weight: 800; color: #ffffff;">Hi ${name},</h2>
+                <p style="font-size: 14px; line-height: 1.6; color: #94a3b8; margin: 0 0 20px 0;">
+                  Thanks for reaching out! We've successfully received your message and our team will get back to you within 24-48 hours.
+                </p>
+                <div style="background-color: #0c0e12; border: 1px solid #1f2937; padding: 25px; border-radius: 12px; margin-bottom: 25px; text-align: left;">
+                  <h3 style="margin: 0 0 16px 0; font-size: 13px; font-weight: 800; color: #00e5ff; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #1f2937; padding-bottom: 8px;">Your Message Copy</h3>
+                  <table width="100%" border="0" cellpadding="6" cellspacing="0" style="font-size: 13px; color: #94a3b8;">
+                    <tr>
+                      <td width="35%" style="font-weight: bold; color: #ffffff; padding: 6px 0; vertical-align: top;">Name:</td>
+                      <td style="padding: 6px 0; color: #e2e8f0; vertical-align: top;">${name}</td>
+                    </tr>
+                    <tr>
+                      <td style="font-weight: bold; color: #ffffff; padding: 6px 0; vertical-align: top;">Email:</td>
+                      <td style="padding: 6px 0; color: #e2e8f0; vertical-align: top;">${email}</td>
+                    </tr>
+                    <tr>
+                      <td style="font-weight: bold; color: #ffffff; padding: 6px 0; vertical-align: top;">Phone / WhatsApp:</td>
+                      <td style="padding: 6px 0; color: #e2e8f0; vertical-align: top;">${course || 'Not provided'}</td>
+                    </tr>
+                    <tr>
+                      <td style="font-weight: bold; color: #ffffff; padding: 6px 0; vertical-align: top;">Subject:</td>
+                      <td style="padding: 6px 0; color: #e2e8f0; vertical-align: top;">${extraData.subject || 'General Inquiry'}</td>
+                    </tr>
+                    <tr>
+                      <td colspan="2" style="font-weight: bold; color: #ffffff; padding: 12px 0 6px 0; border-top: 1px solid #1f2937; vertical-align: top;">Message:</td>
+                    </tr>
+                    <tr>
+                      <td colspan="2" style="padding: 12px; background-color: #0f172a; border-radius: 8px; color: #94a3b8; font-family: monospace; line-height: 1.5; white-space: pre-wrap; border: 1px solid #1f2937; vertical-align: top; text-align: left;">${messageBody}</td>
+                    </tr>
+                  </table>
+                </div>
+                <p style="font-size: 13px; color: #94a3b8; margin: 0;">Speak soon,</p>
+                <p style="font-size: 13px; font-weight: 700; color: #ffffff; margin: 5px 0 0 0;">Team AlgorithmAze AI</p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding: 30px 40px; background-color: #020617; border-top: 1px solid #1f2937; text-align: center;">
+                <p style="margin: 0; font-size: 11px; color: #475569; font-weight: 500;">© 2026 AlgorithmAze AI. All rights reserved.</p>
+                <p style="margin: 4px 0 0 0; font-size: 10px; color: #475569; font-weight: 500;">Trichy, Tamil Nadu, India • algorithmazeai@gmail.com • +91 7448991888</p>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
+        `;
 
-      mailOptions = {
-        from: process.env.EMAIL_USER || 'your_email@gmail.com',
-        to: email,
-        bcc: adminEmail,
-        subject: `Invoice & Enrollment Confirmed: ${course} - AlgorithmazeAI`,
-        html: htmlBody
-      };
+        await transporter.sendMail({
+          from: senderEmail,
+          to: email,
+          subject: "Message Received - AlgorithmAze AI",
+          html: clientGeneralHtml
+        });
+
+        // Send to Admin
+        mailOptions = {
+          from: senderEmail,
+          to: adminEmail,
+          subject: `New Contact Message from ${name}`,
+          html: `<h2>New Contact Inquiry</h2><p><strong>Name:</strong> ${name}</p><p><strong>Email:</strong> ${email}</p><p><strong>Phone:</strong> ${course || 'Not provided'}</p><p><strong>Message:</strong> ${messageBody}</p>`
+        };
+      }
+    } else {
+      if (extraData.type === 'internship') {
+        // Incubator Application Form Auto-responder (to Student)
+        const incubatorHtml = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Application Received | AlgorithmAze AI Incubator</title>
+        </head>
+        <body style="margin: 0; padding: 0; background-color: #06080D; font-family: 'Segoe UI', Roboto, sans-serif; color: #e2e8f0;">
+          <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; background-color: #0b0c10; margin: 30px auto; border: 1px solid #1f2937; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,255,198,0.05);">
+            <tr>
+              <td style="padding: 40px; background: linear-gradient(135deg, #0f172a 0%, #020617 100%); border-bottom: 2px solid #00ffc6;">
+                <h1 style="margin: 0; font-size: 24px; font-weight: 900; color: #ffffff; letter-spacing: -0.5px;">AlgorithmAze <span style="color: #00ffc6;">AI</span></h1>
+                <p style="margin: 4px 0 0 0; font-size: 10px; font-weight: 700; color: #94a3b8; letter-spacing: 2px; text-transform: uppercase;">Tech Incubator & Talent Accelerator</p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding: 40px; background-color: #0b0c10;">
+                <h2 style="margin: 0 0 20px 0; font-size: 18px; font-weight: 800; color: #ffffff;">Hi ${name},</h2>
+                <div style="background-color: #0f172a; border-left: 4px solid #00ffc6; padding: 20px; border-radius: 8px; margin-bottom: 25px; border: 1px solid #1f2937; border-left-width: 4px;">
+                  <p style="margin: 0; font-size: 14px; color: #ffffff; font-weight: 700; line-height: 1.6;">
+                    "We value people who build things. Our team will review your application and check out your projects. Talk soon!"
+                  </p>
+                </div>
+                <p style="font-size: 14px; line-height: 1.6; color: #94a3b8; margin: 0 0 20px 0;">
+                  Your application to the AlgorithmAze AI Incubator has been received. Here are your details for reference:
+                </p>
+                <table width="100%" border="0" cellpadding="8" cellspacing="0" style="margin-bottom: 25px; border: 1px solid #1f2937; border-radius: 8px; font-size: 13px; color: #94a3b8;">
+                  <tr style="border-bottom: 1px solid #1f2937;">
+                    <td style="font-weight: bold; color: #ffffff;">Application Ref:</td>
+                    <td style="font-family: monospace;">${refNo}</td>
+                  </tr>
+                  <tr style="border-bottom: 1px solid #1f2937;">
+                    <td style="font-weight: bold; color: #ffffff;">Incubator Track:</td>
+                    <td>${course || extraData.internshipDomain || 'Software/Hardware Builder'}</td>
+                  </tr>
+                  <tr style="border-bottom: 1px solid #1f2937;">
+                    <td style="font-weight: bold; color: #ffffff;">Phone / WhatsApp:</td>
+                    <td>${extraData.phone || 'Not provided'}</td>
+                  </tr>
+                  <tr style="border-bottom: 1px solid #1f2937;">
+                    <td style="font-weight: bold; color: #ffffff;">Collaboration Duration:</td>
+                    <td>${extraData.duration || 'Flexible'}</td>
+                  </tr>
+                  <tr>
+                    <td style="font-weight: bold; color: #ffffff;">Education/Dept:</td>
+                    <td>${extraData.educationLevel || 'Student'} - ${extraData.department || 'General'}</td>
+                  </tr>
+                </table>
+                <p style="font-size: 13px; color: #94a3b8; margin: 0;">Make sure your Github profile or project portfolio is up to date, as our developers review applications based on proof of work rather than theory.</p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding: 30px 40px; background-color: #020617; border-top: 1px solid #1f2937; text-align: center;">
+                <p style="margin: 0; font-size: 11px; color: #475569; font-weight: 500;">© 2026 AlgorithmAze AI. All rights reserved.</p>
+                <p style="margin: 4px 0 0 0; font-size: 10px; color: #475569; font-weight: 500;">Trichy, Tamil Nadu, India • algorithmazeai@gmail.com • +91 7448991888</p>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
+        `;
+
+        await transporter.sendMail({
+          from: senderEmail,
+          to: email,
+          subject: "Application Received | AlgorithmAze AI Incubator",
+          html: incubatorHtml
+        });
+
+        // Send to Admin
+        mailOptions = {
+          from: senderEmail,
+          to: adminEmail,
+          subject: `[New Incubator App] ${name} - ${course || extraData.internshipDomain}`,
+          html: `
+            <h2>New Incubator & Talent Accelerator Application</h2>
+            <p><strong>Name:</strong> ${name}</p>
+            <p><strong>Email:</strong> ${email}</p>
+            <p><strong>Phone:</strong> ${extraData.phone || 'Not provided'}</p>
+            <p><strong>Ref No:</strong> ${refNo}</p>
+            <p><strong>Track:</strong> ${course || extraData.internshipDomain}</p>
+            <p><strong>Department:</strong> ${extraData.department || 'Not provided'}</p>
+            <p><strong>Education Level:</strong> ${extraData.educationLevel || 'Not provided'}</p>
+            <p><strong>Duration:</strong> ${extraData.duration || 'Not provided'}</p>
+            <p><strong>Mindset / Project Type:</strong> ${extraData.projectType || 'Not provided'}</p>
+          `
+        };
+      } else {
+        // Paid Training Enrollment (Tax Invoice Receipt) Rebranded
+        const invoiceDate = new Date().toLocaleDateString('en-IN', {
+          day: '2-digit',
+          month: 'long',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true
+        });
+
+        const amtPaid = extraData.amountPaid || 0;
+        const amtDue = extraData.amountDue || 0;
+        const totalFee = Number(amtPaid) + Number(amtDue);
+        const isFullPayment = Number(amtDue) === 0 && Number(amtPaid) > 0;
+        const isPartPayment = Number(amtPaid) > 0 && Number(amtDue) > 0;
+        const isPayOnDay = paymentStatus === 'Pay on Day (Cash)' || extraData.paymentStatus === 'Pay on Day';
+        const isFree = paymentStatus === 'Free Registration' || extraData.paymentStatus === 'Free';
+
+        let invoiceStatusBadge = '';
+        if (isFullPayment) {
+          invoiceStatusBadge = `<span style="background-color: #00ffc6; color: #08080c; padding: 6px 14px; border-radius: 6px; font-size: 11px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; display: inline-block;">Fully Paid / Verified</span>`;
+        } else if (isPartPayment) {
+          invoiceStatusBadge = `<span style="background-color: #f59e0b; color: #08080c; padding: 6px 14px; border-radius: 6px; font-size: 11px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; display: inline-block;">Advance Paid / Balance Pending</span>`;
+        } else if (isPayOnDay) {
+          invoiceStatusBadge = `<span style="background-color: #3b82f6; color: #ffffff; padding: 6px 14px; border-radius: 6px; font-size: 11px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; display: inline-block;">Cash Booking / Pay on Spot</span>`;
+        } else if (isFree) {
+          invoiceStatusBadge = `<span style="background-color: #10b981; color: #ffffff; padding: 6px 14px; border-radius: 6px; font-size: 11px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; display: inline-block;">Free Registration</span>`;
+        } else {
+          invoiceStatusBadge = `<span style="background-color: #6b7280; color: #ffffff; padding: 6px 14px; border-radius: 6px; font-size: 11px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; display: inline-block;">Confirmed / Applied</span>`;
+        }
+
+        const htmlBody = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Registration Tax Invoice - AlgorithmAze AI</title>
+        </head>
+        <body style="margin: 0; padding: 0; background-color: #06080D; font-family: 'Segoe UI', Roboto, sans-serif; color: #e2e8f0;">
+          <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 650px; background-color: #0b0c10; margin: 30px auto; border: 1px solid #1f2937; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,229,255,0.05);">
+            <!-- Glowing Header -->
+            <tr>
+              <td style="padding: 30px 40px; background: linear-gradient(135deg, #0f172a 0%, #020617 100%); border-bottom: 2px solid #00e5ff;">
+                <table width="100%" border="0" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td>
+                      <h1 style="margin: 0; font-size: 26px; font-weight: 900; color: #ffffff; letter-spacing: -0.5px;">AlgorithmAze<span style="color: #00e5ff;">AI</span></h1>
+                      <p style="margin: 4px 0 0 0; font-size: 10px; font-weight: 700; color: #94a3b8; letter-spacing: 2px; text-transform: uppercase;">Smart Automation & IoT Solutions</p>
+                    </td>
+                    <td align="right">
+                      <p style="margin: 0; font-size: 13px; font-weight: 800; color: #00e5ff; text-transform: uppercase; letter-spacing: 1px;">TAX INVOICE</p>
+                      <p style="margin: 4px 0 0 0; font-size: 11px; font-weight: 600; color: #64748b; font-family: monospace;">${refNo}</p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- Invoice Details Card -->
+            <tr>
+              <td style="padding: 24px 40px; background-color: #0f172a; border-bottom: 1px solid #1f2937;">
+                <table width="100%" border="0" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td width="50%" style="vertical-align: top;">
+                      <p style="margin: 0 0 6px 0; font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 1px;">BILLED TO</p>
+                      <p style="margin: 0 0 2px 0; font-size: 15px; font-weight: 800; color: #ffffff;">${name}</p>
+                      <p style="margin: 0 0 2px 0; font-size: 12px; color: #94a3b8; font-weight: 500;">${email}</p>
+                      <p style="margin: 0; font-size: 12px; color: #94a3b8; font-family: monospace;">${extraData.phone || ''}</p>
+                    </td>
+                    <td width="50%" align="right" style="vertical-align: top;">
+                      <p style="margin: 0 0 6px 0; font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 1px;">INVOICE DETAILS</p>
+                      <p style="margin: 0 0 4px 0; font-size: 12px; color: #94a3b8; font-weight: 500;"><strong>Date:</strong> ${invoiceDate}</p>
+                      <p style="margin: 0 0 8px 0; font-size: 12px; color: #94a3b8; font-weight: 500;"><strong>Payment Status:</strong> ${extraData.paymentStatus || 'Applied'}</p>
+                      <div style="margin-top: 4px;">${invoiceStatusBadge}</div>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- Product Details Table -->
+            <tr>
+              <td style="padding: 40px 40px 20px 40px;">
+                <table width="100%" border="0" cellpadding="0" cellspacing="0" style="border-collapse: collapse;">
+                  <thead>
+                    <tr style="border-bottom: 2px solid #1f2937;">
+                      <th align="left" style="padding: 0 0 12px 0; font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px;">Item Description</th>
+                      <th align="center" style="padding: 0 0 12px 0; font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px;">Qty</th>
+                      <th align="right" style="padding: 0 0 12px 0; font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px;">Total Price</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr style="border-bottom: 1px solid #1f2937;">
+                      <td style="padding: 16px 0; vertical-align: top;">
+                        <p style="margin: 0; font-size: 14px; font-weight: 800; color: #ffffff;">${course}</p>
+                        <p style="margin: 4px 0 0 0; font-size: 11px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Type: Accelerator Program</p>
+                        ${extraData.duration ? `<p style="margin: 2px 0 0 0; font-size: 11px; color: #64748b; font-weight: 500;">Duration: ${extraData.duration}</p>` : ''}
+                      </td>
+                      <td align="center" style="padding: 16px 0; font-size: 13px; font-weight: 700; color: #e2e8f0; vertical-align: top;">1</td>
+                      <td align="right" style="padding: 16px 0; font-size: 14px; font-weight: 800; color: #ffffff; vertical-align: top;">₹${totalFee}/-</td>
+                    </tr>
+
+                    <!-- Calculations -->
+                    <tr>
+                      <td colspan="2" align="right" style="padding: 16px 0 8px 0; font-size: 12px; font-weight: 600; color: #64748b;">Subtotal</td>
+                      <td align="right" style="padding: 16px 0 8px 0; font-size: 12px; font-weight: 700; color: #e2e8f0;">₹${totalFee}/-</td>
+                    </tr>
+                    <tr>
+                      <td colspan="2" align="right" style="padding: 8px 0; font-size: 12px; font-weight: 700; color: #00ffc6; border-bottom: 1px solid #1f2937;">Registration Fee Paid (Advance)</td>
+                      <td align="right" style="padding: 8px 0; font-size: 13px; font-weight: 900; color: #00ffc6; border-bottom: 1px solid #1f2937;">₹${amtPaid}/-</td>
+                    </tr>
+                    <tr>
+                      <td colspan="2" align="right" style="padding: 16px 0 0 0; font-size: 14px; font-weight: 900; color: #ffffff;">Balance Amount Due</td>
+                      <td align="right" style="padding: 16px 0 0 0; font-size: 16px; font-weight: 900; color: #ff5e62;">₹${amtDue}/-</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </td>
+            </tr>
+
+            <!-- Next Steps Notification -->
+            <tr>
+              <td style="padding: 20px 40px 30px 40px;">
+                <div style="background-color: #0f172a; border-left: 3px solid #00e5ff; padding: 20px; border-radius: 8px; border: 1px solid #1f2937; border-left-width: 4px;">
+                  <h4 style="margin: 0 0 8px 0; font-size: 13px; font-weight: 800; color: #ffffff; text-transform: uppercase; letter-spacing: 0.5px;">📋 Instructions for Enrollment</h4>
+                  <p style="margin: 0; font-size: 12px; color: #94a3b8; font-weight: 500; line-height: 1.6;">
+                    ${isPayOnDay 
+                      ? `Please prepare a cash payment of <strong>₹${amtDue}</strong> to be submitted on the day of the class. Ensure to bring a physical copy or screenshot of this invoice.` 
+                      : isPartPayment 
+                      ? `Your advance seat registration of <strong>₹${amtPaid}</strong> is confirmed via transaction ID <strong>${extraData.paymentId || 'Verified'}</strong>. The remaining balance of <strong>₹${amtDue}</strong> must be paid upon program commencement.`
+                      : isFree 
+                      ? `Your registration is free. Our program administrator will schedule your onboarding.`
+                      : `Your program fee of <strong>₹${amtPaid}</strong> is fully verified. Your account is fully active!`
+                    }
+                  </p>
+                </div>
+              </td>
+            </tr>
+
+            <!-- Security and Seal -->
+            <tr>
+              <td style="padding: 0 40px 40px 40px;">
+                <table width="100%" border="0" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td width="60%" style="vertical-align: bottom;">
+                      <p style="margin: 0; font-size: 10px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">✓ Direct Banking Receipt Verified</p>
+                      <p style="margin: 2px 0 0 0; font-size: 10px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">✓ Certified SSL Secure Transaction</p>
+                    </td>
+                    <td width="40%" align="right" style="vertical-align: bottom;">
+                      <div style="text-align: right;">
+                        <p style="margin: 0 0 5px 0; font-size: 11px; font-weight: 700; color: #64748b; font-style: italic;">AlgorithmAze AI</p>
+                        <div style="border-top: 1px dashed #475569; padding-top: 5px; font-size: 9px; font-weight: 900; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px;">Authorized Signatory</div>
+                      </div>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- Corporate Footer -->
+            <tr>
+              <td style="padding: 24px; background-color: #020617; border-top: 1px solid #1f2937; text-align: center;">
+                <p style="margin: 0; font-size: 11px; color: #475569; font-weight: 500;">© 2026 AlgorithmAze AI. All rights reserved.</p>
+                <p style="margin: 4px 0 0 0; font-size: 10px; color: #475569; font-weight: 500;">Trichy, Tamil Nadu, India • algorithmazeai@gmail.com • +91 7448991888</p>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
+        `;
+
+        mailOptions = {
+          from: senderEmail,
+          to: email,
+          bcc: adminEmail,
+          subject: `Invoice & Enrollment Confirmed: ${course} - AlgorithmAze AI`,
+          html: htmlBody
+        };
+      }
     }
     await transporter.sendMail(mailOptions);
   } catch (error) {
@@ -634,21 +898,26 @@ apiRouter.delete('/applications/:id', async (req, res) => {
 
 apiRouter.post('/contact', async (req, res) => {
   const msg = { ...req.body, id: Date.now().toString(), date: new Date().toISOString() };
+  let dbMessage = msg.message || '';
+  if (msg.isProjectIntake) {
+    dbMessage = `[PROJECT INTAKE]\nProject Type: ${msg.projectType || 'Not specified'}\nTimeline: ${msg.timeline || 'Not specified'}\nScope: ${msg.message || ''}`;
+  }
   if (useDB) {
     try {
       await pool.query('INSERT INTO messages (id, name, email, phone, message, date) VALUES (?, ?, ?, ?, ?, ?)',
-        [msg.id, msg.name, msg.email, msg.phone || '', msg.message, new Date(msg.date)]
+        [msg.id, msg.name, msg.email, msg.phone || '', dbMessage, new Date(msg.date)]
       );
-      // Admin notification
-      sendConfirmationEmail(msg.email, msg.name, msg.phone, '', '', '', true, msg.message);
+      // Auto-response to client and admin notification
+      sendConfirmationEmail(msg.email, msg.name, msg.phone, '', '', '', true, msg.message || '', { isProjectIntake: !!msg.isProjectIntake, projectType: msg.projectType, timeline: msg.timeline, subject: msg.subject });
       res.json({ success: true, message: 'Message sent!' });
     } catch (err) { res.status(500).json({ success: false }); }
   } else {
     try {
       const data = JSON.parse(fs.readFileSync(messagesFile, 'utf8'));
-      data.push(msg);
+      const savedMsg = { ...msg, message: dbMessage };
+      data.push(savedMsg);
       fs.writeFileSync(messagesFile, JSON.stringify(data, null, 2));
-      sendConfirmationEmail(msg.email, msg.name, msg.phone, '', '', '', true, msg.message);
+      sendConfirmationEmail(msg.email, msg.name, msg.phone, '', '', '', true, msg.message || '', { isProjectIntake: !!msg.isProjectIntake, projectType: msg.projectType, timeline: msg.timeline, subject: msg.subject });
       res.json({ success: true });
     } catch(e) { res.status(500).json({ success: false }); }
   }

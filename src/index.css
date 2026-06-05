@@ -182,3 +182,13 @@
 @utility bg-gradient-radial {
     background-image: radial-gradient(var(--tw-gradient-stops));
 }
+
+/* Custom Cursor styling to hide default browser cursor on desktop */
+@media (hover: hover) and (pointer: fine) {
+  html, body {
+    cursor: none !important;
+  }
+  a, button, select, input, textarea, .cursor-pointer, [role="button"] {
+    cursor: none !important;
+  }
+}

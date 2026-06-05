@@ -270,7 +270,7 @@ export default function RegistrationPage() {
         }
       : { 
           type: actualType, name, email, phone, educationLevel, department, internshipDomain, 
-          duration, projectType, status: 'Applied',
+          duration, projectType, studying, leadDetails, status: 'Applied',
           paymentStatus: pStatus,
           paymentId: paymentResponse?.razorpay_payment_id || '',
           amountPaid: actualAmountPaid,
@@ -335,10 +335,10 @@ export default function RegistrationPage() {
             
             <div className="text-center mb-10">
               <h1 className={`text-3xl md:text-4xl font-extrabold mb-3 text-transparent bg-clip-text bg-gradient-to-r ${actualType === 'course' ? 'from-white to-electric-blue' : 'from-white to-teal-green'}`}>
-                {status === 'payment' ? 'Checkout' : (actualType === 'course' ? 'Join Program' : 'Apply for Internship')}
+                {status === 'payment' ? 'Checkout' : (actualType === 'course' ? 'Join Program' : 'Apply to Tech Incubator')}
               </h1>
               {actualType === 'course' && <p className="text-lg font-bold text-white/80">{courseData?.title || courseNameParam}</p>}
-              {actualType === 'internship' && <p className="text-lg font-bold text-white/80">Launch Your Career</p>}
+              {actualType === 'internship' && <p className="text-lg font-bold text-white/80">Tech Incubator & Talent Accelerator</p>}
             </div>
 
             {status === 'payment' ? (
@@ -533,7 +533,7 @@ export default function RegistrationPage() {
                     <>
                       <div className="border-b border-white/10 pb-4 mb-4 pt-4">
                         <h3 className="text-sm font-extrabold text-teal-green uppercase tracking-wider flex items-center gap-1.5">
-                          <span>💼</span> Internship Mapping Specifications
+                          <span>💼</span> Incubator Specifications
                         </h3>
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -551,7 +551,7 @@ export default function RegistrationPage() {
                         </div>
                       </div>
                       <div>
-                        <label htmlFor="internshipDomain" className="block text-xs uppercase tracking-widest text-white/50 font-bold mb-1.5">Internship Domain Needed</label>
+                        <label htmlFor="internshipDomain" className="block text-xs uppercase tracking-widest text-white/50 font-bold mb-1.5">Incubator Track Needed</label>
                         <select 
                           required 
                           id="internshipDomain" 
@@ -592,6 +592,16 @@ export default function RegistrationPage() {
                             <option value="Both">Both (Mini + Major)</option>
                           </select>
                         </div>
+                      </div>
+                      <div className="mt-6">
+                        <label htmlFor="githubProfile" className="block text-xs uppercase tracking-widest text-white/50 font-bold mb-1.5">GitHub Profile / Portfolio URL</label>
+                        <input required id="githubProfile" name="githubProfile" type="url" placeholder="https://github.com/username" value={studying} onChange={e => setStudying(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-white focus:outline-none focus:border-teal-green transition-colors" />
+                        <span className="text-[10px] text-white/30 mt-1 block">Link to your public repository or project portfolio.</span>
+                      </div>
+                      <div className="mt-6">
+                        <label htmlFor="builderMindset" className="block text-xs uppercase tracking-widest text-white/50 font-bold mb-1.5">Builder Mindset / What do you want to build?</label>
+                        <textarea required id="builderMindset" name="builderMindset" rows={4} placeholder="Tell us about the systems you have built or what physical/digital products you want to collaborate on in our incubator..." value={leadDetails} onChange={e => setLeadDetails(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-white focus:outline-none focus:border-teal-green transition-colors resize-none" />
+                        <span className="text-[10px] text-white/30 mt-1 block">Help us understand your hands-on coding and maker capabilities.</span>
                       </div>
                     </>
                   )}

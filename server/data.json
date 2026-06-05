@@ -66,5 +66,26 @@
     "id": "1779106819157",
     "date": "2026-05-18T12:20:19.157Z",
     "refNo": "AM-Co-26-05-0004"
+  },
+  {
+    "type": "internship",
+    "name": "ANTONY ROBINSON S",
+    "email": "algorithmazeai@gmail.com",
+    "phone": "8056718691",
+    "educationLevel": "UG",
+    "department": "aaa",
+    "internshipDomain": "Industrial IoT (Smart Device) Internship",
+    "duration": "15 Days",
+    "projectType": "Mini Project",
+    "studying": "https://swa.git",
+    "leadDetails": "no",
+    "status": "Applied",
+    "paymentStatus": "Free",
+    "paymentId": "",
+    "amountPaid": 0,
+    "amountDue": 0,
+    "id": "1780566214396",
+    "date": "2026-06-04T09:43:34.396Z",
+    "refNo": "AM-Int-26-06-0005"
   }
 ]
